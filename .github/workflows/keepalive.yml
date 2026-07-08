@@ -1,0 +1,51 @@
+# Ping anti-pausa cada 3 días.
+#
+# El plan free de Supabase pausa el proyecto tras ~7 días sin actividad. Este workflow
+# hace una petición GET ligera al endpoint REST para mantenerlo despierto.
+#
+# SECRETS que hay que configurar en GitHub
+# (Settings → Secrets and variables → Actions → New repository secret):
+#
+#   SUPABASE_URL              URL del proyecto (ej. https://xxxxxxxx.supabase.co).
+#                             La misma que VITE_SUPABASE_URL del frontend.
+#   SUPABASE_PUBLISHABLE_KEY  Clave publishable / anon del proyecto.
+#                             La misma que VITE_SUPABASE_PUBLISHABLE_KEY del frontend.
+#                             Es pública por diseño (protegida por RLS), pero se guarda
+#                             como secret para no exponerla en los logs del workflow.
+#
+# NOTA: nunca uses aquí la service_role / sb_secret_...: basta con la anon key.
+
+name: Keepalive Supabase
+
+on:
+  schedule:
+    # Cada 3 días a las 06:00 UTC.
+    - cron: '0 6 */3 * *'
+  workflow_dispatch: # permite lanzarlo a mano desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GET al endpoint REST de Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_PUBLISHABLE_KEY" ]; then
+            echo "::error::Faltan los secrets SUPABASE_URL y/o SUPABASE_PUBLISHABLE_KEY."
+            exit 1
+          fi
+          # Petición al endpoint REST raíz. Solo necesita la anon key en las cabeceras.
+          # -f hace que curl falle (exit != 0) ante respuestas de error HTTP.
+          # No se imprime el cuerpo para no volcar datos ni la clave en el log.
+          HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}" \
+            "${SUPABASE_URL}/rest/v1/")"
+          echo "Respuesta HTTP: ${HTTP_CODE}"
+          # 200 (OK) o 404 (sin recurso, pero el proyecto respondió) valen como "vivo".
+          case "$HTTP_CODE" in
+            2??|404) echo "Supabase responde. Proyecto despierto." ;;
+            *) echo "::error::Respuesta inesperada del proyecto Supabase: ${HTTP_CODE}"; exit 1 ;;
+          esac
