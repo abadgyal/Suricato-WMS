@@ -12,6 +12,12 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+.env.local.txt
+
+# Ficheros con secretos que NO deben versionarse jamás
+Contraseñas y cosas.txt
+*secret*
+*service_role*
 
 # Logs
 *.log
@@ -29,6 +35,3 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
-
-# Notas locales privadas (no deben acabar en el repo)
-Contraseñas y cosas.txt
