@@ -15,13 +15,17 @@ RLS). Todos los usuarios con credenciales ven el mismo estado en tiempo real.
 
 ## 1. Autenticación y usuarios
 
-- Login con usuario y contraseña vía Supabase Auth. Sesión persistente.
-- Cada operación registra automáticamente el usuario que la ejecuta.
+- Login con **email** y contraseña vía Supabase Auth. Sesión persistente. Los datos
+  de aplicación (rol, nombre, estado) viven en la tabla `perfil`, que cuelga de
+  `auth.users` (ver `DOMAIN.md §3.1`).
+- Cada operación registra automáticamente el `perfil` autenticado que la ejecuta
+  (`auth.uid()`); el cliente no elige el autor.
 - **Roles** (aplicados por RLS en el servidor, no solo en el cliente):
   - `admin`: acceso completo, incluida gestión de usuarios, categorías y ajustes.
   - `trabajador`: operaciones del día a día; sin configuración del sistema.
-- El admin principal está protegido: no puede eliminarse. Los usuarios se dan de
-  baja lógica para preservar el histórico que los referencia.
+- El `perfil` principal (`es_principal = true`) está protegido: no puede eliminarse.
+  Los usuarios se dan de baja lógica (`activo = false`) para preservar el histórico
+  que los referencia.
 
 ## 2. Panel principal (dashboard)
 
@@ -154,8 +158,8 @@ Cartera con visibilidad de material, reservas e historial.
 
 ## 13. Panel de administración (solo admin)
 
-- **Usuarios**: crear (nombre, usuario, contraseña, rol), listar, dar de baja
-  (excepto el principal).
+- **Usuarios** (`perfil`): crear (email, nombre, contraseña, rol) vía Edge Function
+  con service role, listar, dar de baja lógica (excepto el `es_principal`).
 - **Categorías**: añadir y eliminar (chips de color).
 
 ## 14. Características transversales

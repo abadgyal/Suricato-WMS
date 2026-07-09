@@ -34,6 +34,10 @@ del producto y el id del movimiento generado:
 El frontend usa este retorno para refrescar la UI sin recargar. (Realtime propaga
 además el cambio al resto de clientes.)
 
+> Excepción: `devolver` (§2.5) puede generar **varios** movimientos (uno por
+> destino OK/roto/perdido), así que amplía este retorno con `movimiento_ids`
+> (array); `movimiento_id` conserva el primero por compatibilidad.
+
 ### 1.2 Formato de errores
 Las RPC lanzan `RAISE EXCEPTION` con un código estable en el mensaje. Supabase lo
 entrega al cliente. Formato: `WMSNNN: mensaje`.
@@ -157,6 +161,8 @@ Check-in del material que vuelve de un evento. Reparte las unidades entre destin
 - **Efecto:** `en_evento` baja en el total repartido; `disponible += p_ok`,
   `en_reparacion += p_roto`, `total -= p_perdido`. Genera uno o varios movimientos
   `devolucion` (uno por destino con unidades > 0).
+- **Retorno:** retorno estándar (§1.1) + `movimiento_ids` (array con todos los
+  movimientos generados; `movimiento_id` es el primero del array).
 - **Errores:** WMS005, WMS002, WMS003 (si `p_perdido > 0` sin motivo).
 
 ### 2.6 `marcar_reparado`
