@@ -61,6 +61,7 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** el humano debería moverlos fuera del repo y **rotar la
   `service_role`** si hubo riesgo de exposición. Ver resumen de la sesión.
 - **Fecha:** 2026-07-08.
+- **Estado:** ✅ RESUELTA en S-A (2026-07-09)
 
 ### [S-A] Nota de diseño: `movimiento.bucket_destino` es `text`, no enum
 - **Qué:** `bucket_origen` usa el enum `bucket` (3 valores), pero `bucket_destino` es
