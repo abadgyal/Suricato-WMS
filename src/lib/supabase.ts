@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database'
 
 /**
  * Cliente Supabase de la aplicación.
@@ -26,4 +27,11 @@ if (!publishableKey) {
   )
 }
 
-export const supabase = createClient(url, publishableKey)
+export const supabase = createClient<Database>(url, publishableKey, {
+  auth: {
+    // Sesión persistente entre recargas y refresco automático del token.
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+})
