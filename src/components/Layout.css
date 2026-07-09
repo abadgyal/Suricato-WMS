@@ -1,0 +1,79 @@
+.layout {
+  display: flex;
+  height: 100%;
+  background-color: var(--color-canvas);
+}
+
+.layout__sidebar {
+  height: 100%;
+}
+
+.layout__main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* Barra superior: oculta en escritorio, visible en móvil. */
+.layout__topbar {
+  display: none;
+}
+
+.layout__backdrop {
+  display: none;
+}
+
+/* --- Responsive: sidebar como drawer --- */
+@media (max-width: 860px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .layout__topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--color-sidebar);
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .layout__menu-btn {
+    display: inline-flex;
+    padding: 4px;
+    border: none;
+    background: transparent;
+    color: #fff;
+  }
+
+  .layout__topbar-marca {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    font-size: 16px;
+  }
+
+  .layout__sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+  }
+
+  .layout__sidebar--abierto {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .layout__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background-color: rgba(23, 22, 31, 0.5);
+  }
+}

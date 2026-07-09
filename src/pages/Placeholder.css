@@ -1,0 +1,37 @@
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: var(--space-6);
+}
+
+.placeholder__caja {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  max-width: 46ch;
+}
+
+.placeholder__badge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 999px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-tint);
+}
+
+.placeholder__caja h1 {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.placeholder__caja p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}

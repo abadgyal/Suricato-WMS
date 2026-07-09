@@ -1,21 +1,74 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './auth/useAuth'
+import { Layout } from './components/Layout'
+import { Login } from './pages/Login'
+import { Inventario } from './pages/Inventario'
+import { Placeholder } from './pages/Placeholder'
 import './App.css'
 
-/**
- * S-0 — Scaffold mínimo. Sin lógica de negocio (ni tablas, ni RPC, ni pantallas).
- * El layout, el routing y las pantallas reales empiezan en S-C (ver docs/ROADMAP.md).
- * El cliente Supabase vive en src/lib/supabase.ts y se conectará a partir de S-C.
- */
-function App() {
+/** Splash a pantalla completa mientras se resuelve la sesión persistida. */
+function Splash() {
   return (
-    <main className="app-shell">
-      <h1>WMS · Suricato Producciones</h1>
-      <p>Cimientos listos (S-0). El sistema se construye por sprints.</p>
-      <p className="hint">
-        Configura <code>.env</code> a partir de <code>.env.example</code> antes de
-        conectar con Supabase.
-      </p>
-    </main>
+    <div className="splash">
+      <div className="splash__marca">
+        <span className="splash__logo">SURICATO</span>
+        <span className="splash__sub">· wms ·</span>
+      </div>
+    </div>
   )
 }
 
-export default App
+/** Envuelve las rutas privadas: sin sesión, redirige al login. */
+function RutaProtegida() {
+  const { session, cargando } = useAuth()
+  if (cargando) return <Splash />
+  if (!session) return <Navigate to="/login" replace />
+  return <Layout />
+}
+
+export default function App() {
+  const { session, cargando } = useAuth()
+
+  return (
+    <Routes>
+      <Route
+        path="/login"
+        element={cargando ? <Splash /> : session ? <Navigate to="/inventario" replace /> : <Login />}
+      />
+
+      <Route element={<RutaProtegida />}>
+        <Route index element={<Navigate to="/inventario" replace />} />
+        <Route path="/inventario" element={<Inventario />} />
+        <Route
+          path="/panel"
+          element={
+            <Placeholder
+              titulo="Panel"
+              descripcion="Métricas en tiempo real, alertas de stock bajo y desglose por categoría. Llega en el próximo módulo."
+            />
+          }
+        />
+        <Route
+          path="/movimientos"
+          element={
+            <Placeholder
+              titulo="Movimientos"
+              descripcion="Entradas, salidas a evento, devoluciones y ajustes, con su historial. Llega en el próximo módulo."
+            />
+          }
+        />
+        <Route
+          path="/reservas"
+          element={
+            <Placeholder
+              titulo="Reservas"
+              descripcion="Compromiso anticipado de material por evento, con detección de conflictos. Llega en un módulo posterior."
+            />
+          }
+        />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/inventario" replace />} />
+    </Routes>
+  )
+}

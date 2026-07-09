@@ -1,0 +1,208 @@
+.tabla {
+  --cols: 56px minmax(160px, 2fr) 132px minmax(180px, 1.7fr) 78px 128px 104px;
+  width: 100%;
+}
+
+.tabla__cab,
+.fila {
+  display: grid;
+  grid-template-columns: var(--cols);
+  align-items: center;
+  gap: var(--space-4);
+  padding: 0 var(--space-5);
+}
+
+.tabla__cab {
+  height: 40px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.tabla__num {
+  text-align: right;
+  justify-self: end;
+}
+
+.fila {
+  min-height: 68px;
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color 0.12s ease;
+}
+
+.fila:hover {
+  background-color: var(--color-canvas);
+}
+
+.fila__nombre {
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--color-text);
+  transition: color 0.12s ease;
+}
+
+.fila__nombre:hover {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.fila__stock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fila__stock-nums {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.fila__real {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.fila__minimo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.fila__minimo--bajo {
+  color: var(--bucket-baja);
+}
+
+.fila__minimo-alerta {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bucket-baja);
+}
+
+.fila__fecha {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   Responsive: por debajo de 860px cada fila se apila como tarjeta con etiquetas.
+   ============================================================================ */
+@media (max-width: 860px) {
+  .tabla__cab {
+    display: none;
+  }
+
+  .tabla__cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .fila {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    grid-template-areas:
+      'foto producto'
+      'stock stock'
+      'meta meta';
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+  }
+
+  .fila:hover {
+    background-color: var(--color-surface);
+  }
+
+  .fila__foto {
+    grid-area: foto;
+  }
+  .fila__producto {
+    grid-area: producto;
+    align-self: center;
+  }
+  .fila__stock {
+    grid-area: stock;
+  }
+
+  /* Categoría, mínimo, ubicación y fecha comparten una fila de metadatos. */
+  .fila__categoria,
+  .fila__minimo,
+  .fila__ubicacion,
+  .fila__fecha {
+    display: inline-flex;
+  }
+
+  .fila__categoria {
+    grid-area: producto;
+    justify-self: start;
+  }
+
+  .fila__minimo {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .fila__minimo::before,
+  .fila__ubicacion::before,
+  .fila__fecha::before {
+    content: attr(data-col) ': ';
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .fila__minimo,
+  .fila__ubicacion,
+  .fila__fecha {
+    grid-area: meta;
+  }
+
+  /* Reagrupamos meta como fila flexible. */
+  .fila {
+    grid-template-areas:
+      'foto producto'
+      'stock stock'
+      'minimo minimo'
+      'ubicacion ubicacion'
+      'fecha fecha';
+  }
+  .fila__minimo {
+    grid-area: minimo;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .fila__ubicacion {
+    grid-area: ubicacion;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .fila__fecha {
+    grid-area: fecha;
+    align-items: center;
+    gap: var(--space-2);
+  }
+}

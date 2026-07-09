@@ -1,0 +1,135 @@
+.inventario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.inventario__cab {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.inventario__titulo-zona h1 {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.inventario__sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+}
+
+.inventario__alerta {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bucket-baja);
+  background-color: var(--bucket-baja-tint);
+}
+
+.inventario__vivo {
+  font-size: 12px;
+  color: var(--color-accent);
+  font-weight: 500;
+}
+
+/* --- Buscador --- */
+.inventario__buscador {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  min-width: 260px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inventario__buscador:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+  color: var(--color-accent);
+}
+
+.inventario__buscador-input {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  outline: none;
+}
+
+/* --- Filtros --- */
+.inventario__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.filtro {
+  display: inline-flex;
+}
+
+.filtro .select {
+  width: auto;
+  min-width: 170px;
+  font-size: 13.5px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.filtro__limpiar {
+  border: none;
+  background: none;
+  color: var(--color-accent);
+  font-weight: 500;
+  font-size: 13.5px;
+  padding: 6px 4px;
+}
+
+.filtro__limpiar:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* --- Panel de la tabla --- */
+.inventario__panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .inventario {
+    padding: var(--space-4);
+  }
+  .inventario__buscador {
+    width: 100%;
+    min-width: 0;
+  }
+  .inventario__panel {
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
+  }
+}
