@@ -2,14 +2,21 @@
 -- pgTAP · Invariantes 1-8 (DOMAIN §4) + WMS008, a través del ciclo de RPC.
 -- El runner (scripts/db-test.mjs) envuelve este fichero en BEGIN...ROLLBACK,
 -- así que las fixtures no ensucian la BD.
+--
+-- S-B: las RPC ya no reciben p_usuario_id; el autor es auth.uid(). Fijamos el
+-- JWT del llamante al admin de ejemplo del seed (11111111…, rol=admin) para que
+-- las RPC restringidas (ajustar/dar_de_baja) pasen el control de rol. Las
+-- fixtures de perfil necesitan respaldo en auth.users (FK perfil.id→auth.users).
 -- ============================================================================
+
+-- Autor de las operaciones = admin de ejemplo (auth.uid()).
+set local request.jwt.claims = '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}';
 
 select plan(16);
 
 -- --- Fixtures (UUIDs de test, se revierten con el rollback) ----------------
--- El admin principal para el test de invariante 8 es el del seed
--- (11111111-…): sólo puede existir uno (ux_perfil_principal), así que no se
--- crea otro aquí.
+-- Respaldo en auth.users antes del perfil (solo `id` es NOT NULL).
+insert into auth.users (id) values ('aa000000-0000-0000-0000-000000000001');
 insert into perfil (id, nombre, rol, es_principal) values
   ('aa000000-0000-0000-0000-000000000001', 'Test Worker', 'trabajador', false);
 insert into categoria (id, nombre, color) values
@@ -21,12 +28,12 @@ insert into evento (id, nombre, fecha_inicio, fecha_fin, estado, creado_por) val
 
 -- --- Invariantes 1 y 5: conservación del total a lo largo del ciclo --------
 select is(
-  (salida_evento('aa000000-0000-0000-0000-0000000000a1', 3, 'aa000000-0000-0000-0000-0000000000e1', 'aa000000-0000-0000-0000-000000000001')->>'total')::int,
+  (salida_evento('aa000000-0000-0000-0000-0000000000a1', 3, 'aa000000-0000-0000-0000-0000000000e1')->>'total')::int,
   10, 'inv1/5: salida a evento no cambia el total');
 select is((select en_evento from producto where id = 'aa000000-0000-0000-0000-0000000000a1'), 3,
   'salida mueve unidades a en_evento');
 select is(
-  (devolver('aa000000-0000-0000-0000-0000000000e1', 'aa000000-0000-0000-0000-0000000000a1', 1, 1, 1, 'aa000000-0000-0000-0000-000000000001', 'rotura y pérdida')->>'total')::int,
+  (devolver('aa000000-0000-0000-0000-0000000000e1', 'aa000000-0000-0000-0000-0000000000a1', 1, 1, 1, 'rotura y pérdida')->>'total')::int,
   9, 'inv5: la unidad perdida reduce el total en 1');
 select is((select disponible from producto where id = 'aa000000-0000-0000-0000-0000000000a1'), 8,
   'devolver OK suma a disponible');
@@ -35,13 +42,13 @@ select is((select en_reparacion from producto where id = 'aa000000-0000-0000-000
 select is((select baja_acumulada from producto where id = 'aa000000-0000-0000-0000-0000000000a1'), 1,
   'devolver perdido suma a baja_acumulada');
 select is(
-  (marcar_reparado('aa000000-0000-0000-0000-0000000000a1', 1, 'aa000000-0000-0000-0000-000000000001')->>'total')::int,
+  (marcar_reparado('aa000000-0000-0000-0000-0000000000a1', 1)->>'total')::int,
   9, 'reparado no cambia el total');
 select is(
-  (dar_de_baja('aa000000-0000-0000-0000-0000000000a1', 2, 'disponible', 'aa000000-0000-0000-0000-000000000001', 'obsoleto')->>'total')::int,
+  (dar_de_baja('aa000000-0000-0000-0000-0000000000a1', 2, 'disponible', 'obsoleto')->>'total')::int,
   7, 'inv5: la baja reduce el total');
 select is(
-  (ajustar('aa000000-0000-0000-0000-0000000000a1', 'disponible', 5, 'aa000000-0000-0000-0000-000000000001', 'recuento físico')->>'disponible')::int,
+  (ajustar('aa000000-0000-0000-0000-0000000000a1', 'disponible', 5, 'recuento físico')->>'disponible')::int,
   5, 'ajuste fija el valor del bucket');
 
 -- --- Invariante 2: ningún bucket negativo (CHECK) --------------------------
@@ -59,12 +66,15 @@ select throws_like($$ insert into movimiento (tipo, producto_id, usuario_id, buc
   values ('ajuste', 'aa000000-0000-0000-0000-0000000000a1', 'aa000000-0000-0000-0000-000000000001', 'disponible', 5, 6) $$,
   '%movimiento_motivo_obligatorio%', 'inv7: ajuste sin motivo viola el CHECK');
 
--- --- Invariante 8: admin principal no se elimina; baja lógica sí -----------
--- Se prueba contra el admin principal del seed (11111111-…); el rollback del
--- runner revierte la baja lógica.
-select throws_like($$ delete from perfil where id = '11111111-1111-1111-1111-111111111111' $$,
-  '%WMS_PRINCIPAL%', 'inv8: el admin principal no puede eliminarse');
-select lives_ok($$ update perfil set activo = false where id = '11111111-1111-1111-1111-111111111111' $$,
+-- --- Invariante 8: el perfil principal no se elimina; baja lógica sí -------
+-- Se prueba dinámicamente contra el principal existente (el del seed en dev, o el
+-- admin real tras el bootstrap). El BEFORE DELETE dispara WMS_PRINCIPAL antes que
+-- cualquier FK. El rollback del runner revierte la baja lógica.
+select throws_like(
+  format($$ delete from perfil where id = %L $$, (select id from perfil where es_principal limit 1)),
+  '%WMS_PRINCIPAL%', 'inv8: el perfil principal no puede eliminarse');
+select lives_ok(
+  format($$ update perfil set activo = false where id = %L $$, (select id from perfil where es_principal limit 1)),
   'inv8: la baja lógica del principal sí se permite');
 
 -- --- WMS008: rango de fechas de evento -------------------------------------

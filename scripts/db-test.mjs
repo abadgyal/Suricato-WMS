@@ -107,6 +107,9 @@ const CC = {
 
 async function setupConcurrency(client) {
   await client.query('BEGIN');
+  // Respaldo en auth.users (FK perfil.id -> auth.users); solo `id` es NOT NULL.
+  await client.query(
+    `insert into auth.users (id) values ($1) on conflict (id) do nothing`, [CC.perfil]);
   await client.query(
     `insert into perfil (id, nombre, rol) values ($1, 'CC Worker', 'trabajador')
        on conflict (id) do nothing`, [CC.perfil]);
@@ -135,6 +138,7 @@ async function cleanupConcurrency(client) {
   await client.query('delete from evento where id = $1', [CC.evento]);
   await client.query('delete from categoria where id = $1', [CC.categoria]);
   await client.query('delete from perfil where id = $1', [CC.perfil]);
+  await client.query('delete from auth.users where id = $1', [CC.perfil]);
   await client.query('COMMIT');
 }
 
@@ -150,9 +154,15 @@ async function runConcurrencyTest() {
   try {
     await setupConcurrency(setup);
 
+    // Las RPC usan auth.uid() como autor: fijamos el JWT (a nivel de sesión) al
+    // trabajador de concurrencia en ambas conexiones.
+    const claims = JSON.stringify({ sub: CC.perfil, role: 'authenticated' });
+    await a.query(`select set_config('request.jwt.claims', $1, false)`, [claims]);
+    await b.query(`select set_config('request.jwt.claims', $1, false)`, [claims]);
+
     // Dos salidas simultáneas (autocommit) sobre el mismo producto (disponible=1).
     const fire = (c) =>
-      c.query('select salida_evento($1, 1, $2, $3)', [CC.producto, CC.evento, CC.perfil]);
+      c.query('select salida_evento($1, 1, $2)', [CC.producto, CC.evento]);
     const [ra, rb] = await Promise.allSettled([fire(a), fire(b)]);
 
     const outcomes = [ra, rb];
@@ -193,6 +203,123 @@ async function runConcurrencyTest() {
   }
 }
 
+// --- Tests de seguridad (RLS + roles) ---------------------------------------
+// Simulan usuarios autenticados con `set local role` + `request.jwt.claims`.
+// Usan los datos del seed (admin 11111111, trabajador 22222222, producto Shure).
+// Todo va dentro de BEGIN...ROLLBACK: no muta la BD.
+const SEC = {
+  admin: '11111111-1111-1111-1111-111111111111',
+  trab:  '22222222-2222-2222-2222-222222222222',
+  prod:  'a0000002-0000-0000-0000-000000000002', // Shure SM58, disponible 3
+};
+const claimsOf = (sub) => JSON.stringify({ sub, role: 'authenticated' });
+
+// Ejecuta `run` dentro de una transacción como cierto rol/JWT y siempre revierte.
+// Devuelve { ok, err }.
+async function inTxnAs(client, { claims, role }, run) {
+  await client.query('BEGIN');
+  try {
+    if (claims) await client.query(`select set_config('request.jwt.claims', $1, true)`, [claims]);
+    if (role) await client.query(`set local role ${role}`);
+    await run();
+    await client.query('ROLLBACK');
+    return { ok: true };
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    return { ok: false, err };
+  }
+}
+
+function recordSec(pass, desc, extra = '') {
+  totalTests += 1;
+  if (pass) {
+    console.log('  ' + GREEN(`ok - ${desc}`));
+  } else {
+    totalFailures += 1;
+    console.log('  ' + RED(`not ok - ${desc}`) + (extra ? DIM(`  # ${extra}`) : ''));
+  }
+}
+
+async function runSecurityTests() {
+  console.log(DIM(`\n── seguridad (RLS + roles) ${'─'.repeat(37)}`));
+  const c = new pg.Client(clientConfig);
+  await c.connect();
+  try {
+    // El principal real (dev: seed; prod: bootstrap) se descubre dinámicamente.
+    const { rows } = await c.query('select id from perfil where es_principal limit 1');
+    const principalId = rows[0]?.id ?? SEC.admin;
+
+    // 1) Un trabajador NO puede ajustar ni dar_de_baja → WMS009.
+    let r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(`select ajustar($1, 'disponible', 5, 'x')`, [SEC.prod]));
+    recordSec(!r.ok && /WMS009/.test(r.err?.message), 'trabajador NO puede ajustar (WMS009)',
+      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(`select dar_de_baja($1, 1, 'disponible', 'x')`, [SEC.prod]));
+    recordSec(!r.ok && /WMS009/.test(r.err?.message), 'trabajador NO puede dar_de_baja (WMS009)',
+      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+
+    // 2) Un admin SÍ puede ajustar y dar_de_baja.
+    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+      () => c.query(`select ajustar($1, 'disponible', 5, 'recuento')`, [SEC.prod]));
+    recordSec(r.ok, 'admin SÍ puede ajustar', r.err?.message?.split('\n')[0]);
+
+    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+      () => c.query(`select dar_de_baja($1, 1, 'disponible', 'merma')`, [SEC.prod]));
+    recordSec(r.ok, 'admin SÍ puede dar_de_baja', r.err?.message?.split('\n')[0]);
+
+    // 3) Un trabajador NO puede INSERT directo en movimiento (sin privilegio).
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(
+        `insert into movimiento (tipo, producto_id, usuario_id, unidades, bucket_destino)
+         values ('entrada', $1, $2, 1, 'disponible')`, [SEC.prod, SEC.trab]));
+    recordSec(!r.ok && /permission denied/i.test(r.err?.message), 'trabajador NO puede INSERT en movimiento',
+      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+
+    // 4) Un trabajador NO puede UPDATE sobre los buckets de producto (sin privilegio de columna).
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(`update producto set disponible = disponible + 1 where id = $1`, [SEC.prod]));
+    recordSec(!r.ok && /permission denied/i.test(r.err?.message), 'trabajador NO puede UPDATE buckets de producto',
+      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+
+    // 5) Un trabajador SÍ puede editar metadatos de producto (no buckets).
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(`update producto set ubicacion = 'ZZ-sec' where id = $1`, [SEC.prod]));
+    recordSec(r.ok, 'trabajador SÍ puede editar metadatos de producto', r.err?.message?.split('\n')[0]);
+
+    // 6) Un no-autenticado (anon) no puede leer datos.
+    r = await inTxnAs(c, { role: 'anon' },
+      () => c.query('select count(*) from producto'));
+    recordSec(!r.ok && /permission denied/i.test(r.err?.message), 'anon NO puede leer producto',
+      r.ok ? 'leyó datos' : r.err?.message?.split('\n')[0]);
+
+    // 7) Un autenticado SÍ puede leer inventario.
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query('select count(*) from producto'));
+    recordSec(r.ok, 'autenticado SÍ puede leer producto', r.err?.message?.split('\n')[0]);
+
+    // 8) desactivar_usuario sobre un es_principal falla (invariante 8).
+    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+      () => c.query('select desactivar_usuario($1)', [principalId]));
+    recordSec(!r.ok && /WMS_PRINCIPAL/.test(r.err?.message), 'desactivar_usuario sobre el principal falla',
+      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+
+    // 9) desactivar_usuario sobre un usuario normal, por un admin, funciona.
+    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+      () => c.query('select desactivar_usuario($1)', [SEC.trab]));
+    recordSec(r.ok, 'desactivar_usuario sobre un usuario normal funciona', r.err?.message?.split('\n')[0]);
+
+    // 10) Un trabajador NO puede desactivar usuarios → WMS009.
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query('select desactivar_usuario($1)', [SEC.trab]));
+    recordSec(!r.ok && /WMS009/.test(r.err?.message), 'trabajador NO puede desactivar_usuario (WMS009)',
+      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+  } finally {
+    await c.end().catch(() => {});
+  }
+}
+
 // --- Main -------------------------------------------------------------------
 async function main() {
   const admin = new pg.Client(clientConfig);
@@ -206,6 +333,8 @@ async function main() {
   await admin.end();
 
   await runConcurrencyTest();
+
+  await runSecurityTests();
 
   console.log('\n' + '='.repeat(64));
   if (totalFailures === 0) {
