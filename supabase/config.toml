@@ -385,6 +385,12 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Alta de usuarios (S-B, Opción A). verify_jwt exige un JWT válido en el gateway;
+# la función además comprueba que el llamante es admin activo antes de crear nada.
+[functions.crear-usuario]
+enabled = true
+verify_jwt = true
+
 [analytics]
 enabled = true
 port = 54327
