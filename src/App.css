@@ -1,16 +1,36 @@
-.app-shell {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
+/* Splash de arranque mientras se resuelve la sesión. */
+.splash {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background-color: var(--color-sidebar);
 }
 
-.app-shell h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.5rem;
+.splash__marca {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  animation: splash-pulse 1.4s ease-in-out infinite;
 }
 
-.app-shell .hint {
-  margin-top: 2rem;
-  opacity: 0.75;
-  font-size: 0.9rem;
+.splash__logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: 0.16em;
+  color: #fff;
+}
+
+.splash__sub {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.32em;
+  color: var(--color-accent);
+}
+
+@keyframes splash-pulse {
+  50% {
+    opacity: 0.55;
+  }
 }

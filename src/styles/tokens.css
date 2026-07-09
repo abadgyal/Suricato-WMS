@@ -1,0 +1,58 @@
+/* ============================================================================
+   Sistema de diseño — WMS Suricato Producciones
+   Tokens de color, tipografía y forma. Definidos UNA vez y reutilizados; no
+   se escriben hex sueltos por el código. Tono: sobrio con acento índigo, del
+   mundo de la producción audiovisual (equipos técnicos, flightcases, almacén).
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  /* --- Superficies e tinta --- */
+  --color-sidebar: #17161f; /* casi negro con matiz índigo (no negro puro) */
+  --color-canvas: #f5f5f8; /* blanco frío ligado al índigo (no crema) */
+  --color-surface: #ffffff; /* tarjetas, tabla */
+  --color-border: #e6e6ec; /* filete */
+
+  /* --- Texto --- */
+  --color-text: #1c1b22;
+  --color-text-secondary: #6b6a78;
+  --color-text-on-dark: #f5f5f8;
+  --color-text-on-dark-dim: #9a99a8;
+
+  /* --- Acento de marca (índigo) --- */
+  --color-accent: #5a4be0;
+  --color-accent-hover: #4a3bc8;
+  --color-accent-tint: #efedfc;
+  --color-focus-ring: rgba(90, 75, 224, 0.45);
+
+  /* --- Color semántico de buckets (se lee el estado del stock de un vistazo) --- */
+  --bucket-disponible: #1f9d6b;
+  --bucket-disponible-tint: #e6f5ee;
+  --bucket-en-evento: #2d6fe0;
+  --bucket-en-evento-tint: #e7f0fd;
+  --bucket-en-reparacion: #c68a16;
+  --bucket-en-reparacion-tint: #fbf1dc;
+  --bucket-baja: #d34b4b;
+  --bucket-baja-tint: #fbe9e9;
+
+  /* --- Tipografía --- */
+  --font-display: 'Space Grotesk', system-ui, sans-serif; /* títulos, geométrica técnica */
+  --font-body: 'Inter', system-ui, sans-serif; /* cuerpo / UI */
+
+  /* --- Forma y elevación --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(23, 22, 31, 0.06);
+  --shadow-md: 0 6px 24px rgba(23, 22, 31, 0.12);
+  --shadow-lg: 0 24px 60px rgba(23, 22, 31, 0.28);
+
+  /* --- Espaciado base --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
