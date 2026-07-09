@@ -19,6 +19,11 @@ export interface InventarioState {
  * suscribe por Realtime a la tabla `producto`. Las vistas no emiten Realtime, así
  * que escuchamos la tabla base y revalidamos la vista ante cualquier cambio
  * (INSERT/UPDATE/DELETE) hecho desde cualquier cliente.
+ *
+ * `producto` tiene RLS: para que el canal reciba los cambios hay que autenticar
+ * el socket de Realtime con el token del usuario (`realtime.setAuth`). Sin esto
+ * el canal va como `anon` y RLS no deja ver ninguna fila, así que no llega nada.
+ * Nos re-suscribimos si la sesión cambia (login / refresco de token / logout).
  */
 export function useInventario(): InventarioState {
   const [productos, setProductos] = useState<ProductoDisponible[]>([])
@@ -71,14 +76,43 @@ export function useInventario(): InventarioState {
       debounce = setTimeout(() => void cargar(), 250)
     }
 
-    const canal = supabase
-      .channel('inventario-producto')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'producto' }, revalidar)
-      .subscribe()
+    let canal: ReturnType<typeof supabase.channel> | null = null
+    let cancelado = false
+
+    // Autentica el socket de Realtime con el token de la sesión y (re)crea el
+    // canal. Se llama al montar y cada vez que cambia la sesión.
+    async function conectarRealtime() {
+      if (canal) {
+        await supabase.removeChannel(canal)
+        canal = null
+      }
+      const { data } = await supabase.auth.getSession()
+      const token = data.session?.access_token
+      if (!token || cancelado) return
+
+      // Token del usuario → el canal se une autenticado y RLS de `producto`
+      // deja pasar los cambios (postgres_changes se autoriza con este token).
+      await supabase.realtime.setAuth(token)
+      if (cancelado) return
+
+      canal = supabase
+        .channel('inventario-producto')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'producto' }, revalidar)
+        .subscribe()
+    }
+
+    void conectarRealtime()
+
+    // Re-suscribe si la sesión cambia (login, refresco de token, logout).
+    const { data: sub } = supabase.auth.onAuthStateChange(() => {
+      void conectarRealtime()
+    })
 
     return () => {
+      cancelado = true
       clearTimeout(debounce)
-      void supabase.removeChannel(canal)
+      sub.subscription.unsubscribe()
+      if (canal) void supabase.removeChannel(canal)
     }
   }, [cargar])
 
