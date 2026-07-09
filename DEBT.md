@@ -97,3 +97,33 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Por qué:** S-B cierra permisos; el flujo de cancelación es del ciclo de alquiler.
 - **Cuándo se resuelve:** S-E (Reservas/Eventos/Devolución): RPC `cancelar_reserva`.
 - **Fecha:** 2026-07-09.
+
+### [S-C] Realtime revalida el inventario completo ante cualquier cambio
+- **Qué:** `useInventario` se suscribe a `postgres_changes` de la tabla `producto` y,
+  ante cualquier INSERT/UPDATE/DELETE, vuelve a leer la vista entera (con debounce de
+  250 ms). No aplica el cambio fila a fila.
+- **Por qué:** las vistas no emiten Realtime (hay que escuchar la tabla base y
+  revalidar) y el re-fetch total es simple y correcto para el volumen actual.
+- **Cuándo se resuelve:** si el catálogo crece a miles de referencias, aplicar el
+  cambio por fila usando el `payload` del evento en vez de re-leer todo.
+- **Fecha:** 2026-07-09.
+
+### [S-C] Fuentes (Space Grotesk + Inter) cargadas por CDN de Google Fonts
+- **Qué:** `styles/tokens.css` importa las fuentes con `@import url(fonts.googleapis…)`.
+  Depende de red externa y no funciona offline.
+- **Por qué:** rápido y suficiente en desarrollo; evita meter binarios de fuente en el
+  repo antes de tiempo.
+- **Cuándo se resuelve:** S-G (deploy): auto-hospedar las fuentes (woff2 + `@font-face`)
+  para rendimiento y privacidad, sin llamada a terceros.
+- **Fecha:** 2026-07-09.
+
+### [S-C] Fotos de producto: se asume bucket de Storage `productos` público
+- **Qué:** `lib/format.ts` genera la URL de foto con `storage.from('productos')
+  .getPublicUrl(foto_path)`. El seed no trae fotos (`foto_path` nulo), así que el camino
+  con imagen real no se ha probado; si el bucket no existe o no es público, la miniatura
+  caería al marcador.
+- **Por qué:** la subida de fotos es de la entrada de mercancía (S-D); en S-C solo se
+  consume el `foto_path` existente.
+- **Cuándo se resuelve:** S-D (Entrada de stock): crear el bucket `productos` (público,
+  límite 5 MB, JPG/PNG/WebP) y su política, y validar el flujo de foto de punta a punta.
+- **Fecha:** 2026-07-09.
