@@ -127,3 +127,29 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** S-D (Entrada de stock): crear el bucket `productos` (público,
   límite 5 MB, JPG/PNG/WebP) y su política, y validar el flujo de foto de punta a punta.
 - **Fecha:** 2026-07-09.
+- **Estado:** ✅ RESUELTA en S-D (2026-07-09). Migración
+  `20260709120500_storage_productos.sql`: bucket `productos` público, límite 5 MiB,
+  `allowed_mime_types` JPG/PNG/WebP, políticas de subida (autenticado) y lectura
+  pública. El formulario de entrada sube la foto y valida tipo/tamaño en cliente.
+
+### [S-C] Realtime revalida el inventario completo → canal privado autenticado
+- **Estado:** ✅ RESUELTA (parte de autenticación) en S-D (2026-07-09). La deuda
+  original ("revalida el inventario completo ante cualquier cambio", más abajo)
+  sigue vigente como optimización; lo que S-D corrige es que el canal **no recibía
+  cambios** porque la tabla `producto` tiene RLS y el canal iba sin autenticar. Ahora
+  `useInventario` fija el token de la sesión con `supabase.realtime.setAuth(token)` y
+  se re-suscribe si la sesión cambia. La activación de Realtime queda en migración
+  reproducible (`20260709120400_realtime_s_d.sql`: `producto` y `movimiento` en la
+  publicación `supabase_realtime` + `replica identity full`).
+
+### [S-D] Reajuste de permisos: `ajustar`/`dar_de_baja` y categorías abiertas
+- **Qué:** S-B había dejado `ajustar` y `dar_de_baja` como solo-admin (WMS009 por
+  rol) y la escritura de `categoria` como solo-admin. S-D lo relaja: ambas RPC y el
+  CRUD de categorías (crear/editar) quedan abiertos a cualquier autenticado. Borrar
+  categoría sigue siendo solo-admin; la gestión de usuarios (crear-usuario /
+  `desactivar_usuario`) también.
+- **Por qué:** decisión de producto (el día a día del almacén lo llevan trabajadores;
+  reservar ajuste/baja a admin entorpecía la operativa). Documentado en CONTRACTS §1.3.
+- **Cuándo se resuelve:** hecho en S-D. Migración `20260709120300_permisos_s_d.sql`;
+  tests de `db-test.mjs` actualizados (trabajador SÍ ajusta/da de baja/crea categoría).
+- **Fecha:** 2026-07-09.

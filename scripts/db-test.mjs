@@ -249,18 +249,17 @@ async function runSecurityTests() {
     const { rows } = await c.query('select id from perfil where es_principal limit 1');
     const principalId = rows[0]?.id ?? SEC.admin;
 
-    // 1) Un trabajador NO puede ajustar ni dar_de_baja → WMS009.
+    // 1) S-D: un trabajador SÍ puede ajustar y dar_de_baja (permisos abiertos a
+    //    cualquier autenticado; ya no lanzan WMS009 por rol).
     let r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
-      () => c.query(`select ajustar($1, 'disponible', 5, 'x')`, [SEC.prod]));
-    recordSec(!r.ok && /WMS009/.test(r.err?.message), 'trabajador NO puede ajustar (WMS009)',
-      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+      () => c.query(`select ajustar($1, 'disponible', 5, 'recuento')`, [SEC.prod]));
+    recordSec(r.ok, 'trabajador SÍ puede ajustar (S-D)', r.err?.message?.split('\n')[0]);
 
     r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
-      () => c.query(`select dar_de_baja($1, 1, 'disponible', 'x')`, [SEC.prod]));
-    recordSec(!r.ok && /WMS009/.test(r.err?.message), 'trabajador NO puede dar_de_baja (WMS009)',
-      r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
+      () => c.query(`select dar_de_baja($1, 1, 'disponible', 'merma')`, [SEC.prod]));
+    recordSec(r.ok, 'trabajador SÍ puede dar_de_baja (S-D)', r.err?.message?.split('\n')[0]);
 
-    // 2) Un admin SÍ puede ajustar y dar_de_baja.
+    // 2) Un admin también puede ajustar y dar_de_baja.
     r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
       () => c.query(`select ajustar($1, 'disponible', 5, 'recuento')`, [SEC.prod]));
     recordSec(r.ok, 'admin SÍ puede ajustar', r.err?.message?.split('\n')[0]);
@@ -268,6 +267,15 @@ async function runSecurityTests() {
     r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
       () => c.query(`select dar_de_baja($1, 1, 'disponible', 'merma')`, [SEC.prod]));
     recordSec(r.ok, 'admin SÍ puede dar_de_baja', r.err?.message?.split('\n')[0]);
+
+    // 2b) S-D: un trabajador SÍ puede crear y editar categorías (antes solo admin).
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(`insert into categoria (nombre, color) values ('ZZ_SD_CAT', '#123456')`));
+    recordSec(r.ok, 'trabajador SÍ puede crear categoría (S-D)', r.err?.message?.split('\n')[0]);
+
+    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+      () => c.query(`update categoria set color = '#654321' where nombre = 'Audio'`));
+    recordSec(r.ok, 'trabajador SÍ puede editar categoría (S-D)', r.err?.message?.split('\n')[0]);
 
     // 3) Un trabajador NO puede INSERT directo en movimiento (sin privilegio).
     r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },

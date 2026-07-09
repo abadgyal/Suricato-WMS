@@ -55,15 +55,20 @@ entrega al cliente. Formato: `WMSNNN: mensaje`.
 | WMS009  | Permiso denegado para la operación (rol insuficiente)            |
 
 ### 1.3 Roles (aplicados por RLS + comprobación en RPC)
-- **trabajador**: `registrar_entrada`, `salida_evento`, `crear_reserva`,
-  `cumplir_reserva`, `devolver`, `marcar_reparado`. Lecturas. CRUD directo de
-  cliente y evento; edición de metadatos de producto (no buckets).
-- **admin**: todo lo anterior + `ajustar`, `dar_de_baja`, `desactivar_usuario`,
-  gestión de usuarios (Edge Function `crear-usuario`) y de categorías.
+- **cualquier autenticado** (`trabajador` o `admin`): todas las operaciones de
+  stock — `registrar_entrada`, `salida_evento`, `crear_reserva`,
+  `cumplir_reserva`, `devolver`, `marcar_reparado`, **`ajustar`** y
+  **`dar_de_baja`** — más el historial y el dashboard. Lecturas. CRUD directo de
+  cliente y evento; **crear/editar categorías**; edición de metadatos de producto
+  (no buckets).
+- **solo admin**: gestión de usuarios — Edge Function `crear-usuario` y RPC
+  `desactivar_usuario` (WMS009 si no) — y **borrar** categorías.
 
-> **Resuelto (S-B):** `dar_de_baja` como acción independiente es **solo admin**
-> (WMS009 si no). La baja *dentro* de una devolución por pérdida (`devolver`) la
-> sigue haciendo el trabajador.
+> **Actualizado (S-D):** el reparto de S-B se relaja. `ajustar` y `dar_de_baja`
+> pasan a estar abiertas a cualquier usuario autenticado (ya **no** lanzan WMS009
+> por rol; solo si no hay sesión). Las categorías se pueden crear/editar por
+> cualquier autenticado (el DELETE queda solo-admin). Lo único que sigue reservado
+> a admin es la gestión de usuarios.
 
 > **Autor de cada operación (S-B):** las RPC ya **no** reciben `p_usuario_id`. El
 > autor del movimiento es siempre `current_perfil_id()` (= `auth.uid()`), el
@@ -85,8 +90,11 @@ No requiere columnas nuevas; se calcula sobre `movimiento`.
 ## 2. RPC de mutación de stock
 
 > **S-B:** ninguna RPC recibe ya `p_usuario_id`. El autor del movimiento es
-> `current_perfil_id()` (= `auth.uid()`). `ajustar`, `dar_de_baja` y
-> `desactivar_usuario` exigen `is_admin()` y lanzan **WMS009** si el rol no basta.
+> `current_perfil_id()` (= `auth.uid()`).
+>
+> **S-D:** `ajustar` y `dar_de_baja` **ya no exigen `is_admin()`**: cualquier
+> autenticado puede ejecutarlas (solo lanzan WMS009 si no hay sesión). Únicamente
+> `desactivar_usuario` sigue exigiendo `is_admin()` (WMS009).
 
 ### 2.1 `registrar_entrada`
 Llegada de mercancía. Suma a `disponible`. Si `p_producto_id` es `null`, crea el
@@ -195,8 +203,8 @@ Retira unidades del total operativo de forma permanente.
 - **Validación:** el bucket de origen tiene `≥ p_unidades`.
 - **Efecto:** `<bucket_origen> -= p_unidades`; `total` decrece; `baja_acumulada +=
   p_unidades`. Movimiento `baja`.
-- **Rol:** admin (ver §1.3).
-- **Errores:** WMS007, WMS002, WMS003, WMS009.
+- **Rol:** cualquier autenticado (S-D; antes solo admin). Ver §1.3.
+- **Errores:** WMS007, WMS002, WMS003, WMS009 (solo si no hay sesión).
 
 ### 2.8 `ajustar`
 Fija el valor de un bucket para cuadrar con el recuento físico.
@@ -210,8 +218,8 @@ Fija el valor de un bucket para cuadrar con el recuento físico.
 
 - **Efecto:** fija el bucket a `p_valor_nuevo`. Movimiento `ajuste` con
   `valor_anterior` y `valor_nuevo`.
-- **Rol:** admin (ver §1.3).
-- **Errores:** WMS002 (`p_valor_nuevo < 0`), WMS003, WMS009.
+- **Rol:** cualquier autenticado (S-D; antes solo admin). Ver §1.3.
+- **Errores:** WMS002 (`p_valor_nuevo < 0`), WMS003, WMS009 (solo si no hay sesión).
 
 ---
 
@@ -244,6 +252,5 @@ por RLS:
 
 ## 5. Puntos abiertos
 
-- Rol para `dar_de_baja` standalone (§1.3): por defecto admin. Confirmar.
-- ¿La edición de metadatos de producto (ubicación, foto) es libre para trabajador o
-  solo admin? Por defecto: trabajador puede.
+- ~~Rol para `dar_de_baja` standalone~~ → **resuelto (S-D):** cualquier autenticado.
+- ~~Edición de metadatos de producto~~ → trabajador puede (confirmado).
