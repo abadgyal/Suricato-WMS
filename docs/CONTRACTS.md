@@ -56,13 +56,18 @@ entrega al cliente. Formato: `WMSNNN: mensaje`.
 
 ### 1.3 Roles (aplicados por RLS + comprobación en RPC)
 - **trabajador**: `registrar_entrada`, `salida_evento`, `crear_reserva`,
-  `cumplir_reserva`, `devolver`, `marcar_reparado`. Lecturas.
-- **admin**: todo lo anterior + `ajustar`, `dar_de_baja`, gestión de usuarios y
-  categorías.
+  `cumplir_reserva`, `devolver`, `marcar_reparado`. Lecturas. CRUD directo de
+  cliente y evento; edición de metadatos de producto (no buckets).
+- **admin**: todo lo anterior + `ajustar`, `dar_de_baja`, `desactivar_usuario`,
+  gestión de usuarios (Edge Function `crear-usuario`) y de categorías.
 
-> *Punto a confirmar:* ¿`dar_de_baja` como acción independiente debe ser solo admin,
-> o también trabajador? (La baja *dentro* de una devolución por pérdida sí la hace el
-> trabajador.) Por defecto: `dar_de_baja` standalone = admin.
+> **Resuelto (S-B):** `dar_de_baja` como acción independiente es **solo admin**
+> (WMS009 si no). La baja *dentro* de una devolución por pérdida (`devolver`) la
+> sigue haciendo el trabajador.
+
+> **Autor de cada operación (S-B):** las RPC ya **no** reciben `p_usuario_id`. El
+> autor del movimiento es siempre `current_perfil_id()` (= `auth.uid()`), el
+> usuario autenticado real. El cliente no puede suplantar autoría.
 
 ### 1.4 Unidades fuera por evento (derivado)
 `en_evento` es un contador agregado por producto. Para validar devoluciones se usa el
@@ -79,6 +84,10 @@ No requiere columnas nuevas; se calcula sobre `movimiento`.
 
 ## 2. RPC de mutación de stock
 
+> **S-B:** ninguna RPC recibe ya `p_usuario_id`. El autor del movimiento es
+> `current_perfil_id()` (= `auth.uid()`). `ajustar`, `dar_de_baja` y
+> `desactivar_usuario` exigen `is_admin()` y lanzan **WMS009** si el rol no basta.
+
 ### 2.1 `registrar_entrada`
 Llegada de mercancía. Suma a `disponible`. Si `p_producto_id` es `null`, crea el
 producto con los metadatos de alta.
@@ -88,7 +97,6 @@ producto con los metadatos de alta.
 | p_producto_id   | uuid   | no     | Si `null`, se crea producto nuevo.               |
 | p_unidades      | int    | sí     | > 0.                                             |
 | p_cliente_id    | uuid   | no     | Asignación del producto (solo en alta).          |
-| p_usuario_id    | uuid   | sí     | Quien registra.                                  |
 | p_nombre        | text   | alta   | Requerido si se crea producto.                   |
 | p_categoria_id  | uuid   | no     | Solo alta.                                        |
 | p_stock_minimo  | int    | no     | Solo alta. Default 5.                            |
@@ -107,7 +115,6 @@ Bloquea unidades de `disponible` para un evento. No mueve buckets.
 | p_evento_id   | uuid | sí     | → evento.                              |
 | p_producto_id | uuid | sí     |                                        |
 | p_unidades    | int  | sí     | > 0.                                   |
-| p_usuario_id  | uuid | sí     |                                        |
 | p_notas       | text | no     |                                        |
 
 - **Validación:** `disponible_real ≥ p_unidades`.
@@ -122,7 +129,6 @@ Materializa una reserva: mueve el stock y la cierra.
 | Parámetro    | Tipo | Oblig. | Notas |
 |--------------|------|--------|-------|
 | p_reserva_id | uuid | sí     |       |
-| p_usuario_id | uuid | sí     |       |
 
 - **Validación:** reserva en estado `activa`; `disponible_real ≥ unidades`.
 - **Efecto:** `disponible → en_evento` por las unidades de la reserva; reserva pasa a
@@ -137,7 +143,6 @@ Salida directa a un evento sin reserva previa.
 | p_producto_id | uuid | sí     |       |
 | p_unidades    | int  | sí     | > 0.  |
 | p_evento_id   | uuid | sí     |       |
-| p_usuario_id  | uuid | sí     |       |
 
 - **Validación:** `disponible_real ≥ p_unidades`.
 - **Efecto:** `disponible → en_evento`. Movimiento `salida_evento`.
@@ -153,7 +158,6 @@ Check-in del material que vuelve de un evento. Reparte las unidades entre destin
 | p_ok          | int  | sí     | Vuelven bien → `disponible`. ≥ 0.              |
 | p_roto        | int  | sí     | Vuelven rotas → `en_reparacion`. ≥ 0.          |
 | p_perdido     | int  | sí     | No vuelven → `baja` (−total). ≥ 0.             |
-| p_usuario_id  | uuid | sí     |                                                |
 | p_motivo      | text | cond.  | Obligatorio si `p_perdido > 0`.                |
 
 - **Validación:** `p_ok + p_roto + p_perdido ≤ unidades_fuera(producto, evento)`
@@ -172,7 +176,6 @@ Devuelve al almacén material reparado.
 |---------------|------|--------|-------|
 | p_producto_id | uuid | sí     |       |
 | p_unidades    | int  | sí     | > 0.  |
-| p_usuario_id  | uuid | sí     |       |
 
 - **Validación:** `en_reparacion ≥ p_unidades`.
 - **Efecto:** `en_reparacion → disponible`. Movimiento `devolucion`
@@ -187,7 +190,6 @@ Retira unidades del total operativo de forma permanente.
 | p_producto_id   | uuid | sí     |                                          |
 | p_unidades      | int  | sí     | > 0.                                     |
 | p_bucket_origen | text | sí     | `disponible` \| `en_evento` \| `en_reparacion` |
-| p_usuario_id    | uuid | sí     |                                          |
 | p_motivo        | text | sí     | Obligatorio.                             |
 
 - **Validación:** el bucket de origen tiene `≥ p_unidades`.
@@ -204,7 +206,6 @@ Fija el valor de un bucket para cuadrar con el recuento físico.
 | p_producto_id | uuid | sí     |                                                |
 | p_bucket      | text | sí     | `disponible` \| `en_evento` \| `en_reparacion` |
 | p_valor_nuevo | int  | sí     | ≥ 0.                                           |
-| p_usuario_id  | uuid | sí     |                                                |
 | p_motivo      | text | sí     | Obligatorio.                                   |
 
 - **Efecto:** fija el bucket a `p_valor_nuevo`. Movimiento `ajuste` con
