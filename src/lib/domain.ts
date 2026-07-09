@@ -14,6 +14,9 @@ export type ProductoDisponible = Views['v_producto_disponible']['Row']
 
 export type Categoria = Tables['categoria']['Row']
 export type Perfil = Tables['perfil']['Row']
+export type Cliente = Tables['cliente']['Row']
+export type Evento = Tables['evento']['Row']
+export type Movimiento = Tables['movimiento']['Row']
 export type Rol = Enums['rol']
 
 /** Los tres buckets operativos (DOMAIN §1). El orden es el del medidor de carga. */
@@ -32,4 +35,25 @@ export const BUCKET_COLOR_VAR: Record<Bucket, string> = {
   disponible: 'var(--bucket-disponible)',
   en_evento: 'var(--bucket-en-evento)',
   en_reparacion: 'var(--bucket-en-reparacion)',
+}
+
+/** Tipos de movimiento del log inmutable (DOMAIN §3.7). */
+export type TipoMovimiento = Enums['tipo_movimiento']
+
+/** Etiqueta legible de cada tipo de movimiento. */
+export const TIPO_MOV_LABEL: Record<TipoMovimiento, string> = {
+  entrada: 'Entrada',
+  salida_evento: 'Salida a evento',
+  devolucion: 'Devolución',
+  ajuste: 'Ajuste',
+  baja: 'Baja',
+}
+
+/** Color del badge de cada tipo de movimiento (variables de tokens.css). */
+export const TIPO_MOV_COLOR_VAR: Record<TipoMovimiento, string> = {
+  entrada: 'var(--bucket-disponible)',
+  salida_evento: 'var(--bucket-en-evento)',
+  devolucion: 'var(--bucket-en-reparacion)',
+  ajuste: 'var(--color-accent)',
+  baja: 'var(--bucket-baja)',
 }
