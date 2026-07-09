@@ -39,6 +39,12 @@
   background-color: var(--color-canvas);
 }
 
+/* min-width:0 permite que la celda encoja y el nombre no desborde sobre la
+   columna de categoría (los items de grid tienen min-width:auto por defecto). */
+.fila__producto {
+  min-width: 0;
+}
+
 .fila__nombre {
   padding: 0;
   border: none;
@@ -48,6 +54,8 @@
   font-size: 14.5px;
   color: var(--color-text);
   transition: color 0.12s ease;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .fila__nombre:hover {
@@ -122,6 +130,7 @@
     grid-template-columns: 56px 1fr;
     grid-template-areas:
       'foto producto'
+      'categoria categoria'
       'stock stock'
       'meta meta';
     gap: var(--space-3);
@@ -155,7 +164,7 @@
   }
 
   .fila__categoria {
-    grid-area: producto;
+    grid-area: categoria;
     justify-self: start;
   }
 
@@ -185,6 +194,7 @@
   .fila {
     grid-template-areas:
       'foto producto'
+      'categoria categoria'
       'stock stock'
       'minimo minimo'
       'ubicacion ubicacion'
