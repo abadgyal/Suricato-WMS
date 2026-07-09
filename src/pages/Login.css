@@ -1,0 +1,138 @@
+.login {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  height: 100%;
+}
+
+/* --- Panel de marca --- */
+.login__marca {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-6);
+  background: radial-gradient(120% 120% at 0% 0%, #221f33 0%, var(--color-sidebar) 55%);
+  color: var(--color-text-on-dark);
+}
+
+.login__marca-top {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.login__logo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: 0.16em;
+  color: #fff;
+}
+
+.login__logo-sub {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  color: var(--color-accent);
+}
+
+.login__marca-cuerpo {
+  max-width: 40ch;
+}
+
+.login__marca-cuerpo h2 {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1.15;
+  color: #fff;
+}
+
+.login__marca-cuerpo p {
+  color: var(--color-text-on-dark-dim);
+  font-size: 15px;
+}
+
+.login__demo-bar {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: var(--space-5);
+}
+
+.login__demo-bar span {
+  display: block;
+  height: 100%;
+}
+
+.login__demo-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+  font-size: 12.5px;
+  color: var(--color-text-on-dark-dim);
+}
+
+.login__demo-leyenda span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.login__demo-leyenda i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+/* --- Panel del formulario --- */
+.login__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background-color: var(--color-canvas);
+}
+
+.login__form {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.login__titulo {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.login__intro {
+  margin: -8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.login__submit {
+  margin-top: var(--space-2);
+  width: 100%;
+  padding: 12px;
+}
+
+.login__error {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background-color: var(--bucket-baja-tint);
+  border: 1px solid color-mix(in srgb, var(--bucket-baja) 30%, transparent);
+  color: #a13636;
+  font-size: 13.5px;
+}
+
+@media (max-width: 780px) {
+  .login {
+    grid-template-columns: 1fr;
+  }
+  .login__marca {
+    display: none;
+  }
+}
