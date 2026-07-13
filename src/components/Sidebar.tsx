@@ -5,7 +5,8 @@ import {
   IconPanel,
   IconMovimientos,
   IconHistorial,
-  IconReservas,
+  IconEventos,
+  IconCalendario,
   IconSalir,
 } from './icons'
 import './Sidebar.css'
@@ -21,8 +22,9 @@ const NAV: NavItem[] = [
   { to: '/inventario', label: 'Inventario', icon: IconInventario },
   { to: '/panel', label: 'Panel', icon: IconPanel },
   { to: '/movimientos', label: 'Movimientos', icon: IconMovimientos },
+  { to: '/eventos', label: 'Eventos', icon: IconEventos },
+  { to: '/calendario', label: 'Calendario', icon: IconCalendario },
   { to: '/historial', label: 'Historial', icon: IconHistorial },
-  { to: '/reservas', label: 'Reservas', icon: IconReservas, proximamente: true },
 ]
 
 const ROL_LABEL: Record<string, string> = {

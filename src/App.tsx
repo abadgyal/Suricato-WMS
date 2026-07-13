@@ -6,7 +6,9 @@ import { Inventario } from './pages/Inventario'
 import { Movimientos } from './pages/Movimientos'
 import { Historial } from './pages/Historial'
 import { Panel } from './pages/Panel'
-import { Placeholder } from './pages/Placeholder'
+import { Eventos } from './pages/Eventos'
+import { EventoFicha } from './pages/EventoFicha'
+import { Calendario } from './pages/Calendario'
 import './App.css'
 
 /** Splash a pantalla completa mientras se resuelve la sesión persistida. */
@@ -45,15 +47,11 @@ export default function App() {
         <Route path="/panel" element={<Panel />} />
         <Route path="/movimientos" element={<Movimientos />} />
         <Route path="/historial" element={<Historial />} />
-        <Route
-          path="/reservas"
-          element={
-            <Placeholder
-              titulo="Reservas"
-              descripcion="Compromiso anticipado de material por evento, con detección de conflictos. Llega en un módulo posterior."
-            />
-          }
-        />
+        <Route path="/eventos" element={<Eventos />} />
+        <Route path="/eventos/:id" element={<EventoFicha />} />
+        <Route path="/calendario" element={<Calendario />} />
+        {/* Las reservas viven dentro de su evento: no tienen pantalla propia. */}
+        <Route path="/reservas" element={<Navigate to="/eventos" replace />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/inventario" replace />} />
