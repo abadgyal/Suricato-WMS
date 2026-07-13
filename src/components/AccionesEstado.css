@@ -1,0 +1,72 @@
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.acciones__titulo {
+  font-size: 15px;
+}
+
+.acciones__bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background-color: var(--color-canvas);
+  border-radius: var(--radius-md);
+}
+
+.acciones__cab {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.acciones__nombre {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.acciones__nombre--baja {
+  color: var(--bucket-baja);
+}
+
+.acciones__ayuda {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.acciones__vacio {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.acciones__fila {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.acciones__fila--fin {
+  justify-content: flex-end;
+}
+
+.acciones__fila .input {
+  flex: 1;
+}
+
+.acciones__fila .select {
+  flex: 1;
+}
+
+.boton--baja {
+  background-color: var(--bucket-baja);
+  color: #fff;
+}
+
+.boton--baja:hover:not(:disabled) {
+  background-color: #b83e3e;
+}

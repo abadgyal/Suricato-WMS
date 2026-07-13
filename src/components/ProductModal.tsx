@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Categoria, ProductoDisponible } from '../lib/domain'
 import { fotoUrl, formatFecha, formatFechaHora, formatMedida } from '../lib/format'
+import type { EstadoStock } from '../lib/rpc'
 import { StockBar } from './StockBar'
 import { BucketNumbers } from './BucketNumbers'
 import { CategoryChip } from './CategoryChip'
 import { LocationChip } from './LocationChip'
 import { ProductThumb } from './ProductThumb'
 import { Lightbox } from './Lightbox'
+import { AccionesEstado } from './AccionesEstado'
 import { IconCerrar } from './icons'
 import './ProductModal.css'
 
@@ -15,10 +17,12 @@ interface ProductModalProps {
   producto: ProductoDisponible
   categoria?: Categoria
   onClose: () => void
+  /** Se llama tras una acción de estado con éxito (para refrescar la lista). */
+  onCambio?: () => void
 }
 
-/** Ficha de producto en modal — solo lectura (las acciones de estado llegan en S-D). */
-export function ProductModal({ producto, categoria, onClose }: ProductModalProps) {
+/** Ficha de producto en modal con acciones de estado (reparado / baja). */
+export function ProductModal({ producto, categoria, onClose, onCambio }: ProductModalProps) {
   const [lightbox, setLightbox] = useState(false)
   const foto = fotoUrl(producto.foto_path)
   const nombre = producto.nombre ?? 'Producto'
@@ -37,12 +41,29 @@ export function ProductModal({ producto, categoria, onClose }: ProductModalProps
     }
   }, [onClose, lightbox])
 
-  const disponible = producto.disponible ?? 0
-  const en_evento = producto.en_evento ?? 0
-  const en_reparacion = producto.en_reparacion ?? 0
-  const total = producto.total ?? 0
-  const disponibleReal = producto.disponible_real ?? 0
+  // Estado de buckets vivo: se siembra del producto y se actualiza con el retorno
+  // de las RPC de acción (reparado / baja), sin esperar a Realtime.
+  const [buckets, setBuckets] = useState({
+    disponible: producto.disponible ?? 0,
+    en_evento: producto.en_evento ?? 0,
+    en_reparacion: producto.en_reparacion ?? 0,
+    total: producto.total ?? 0,
+  })
+
+  function aplicarEstado(est: EstadoStock) {
+    setBuckets({
+      disponible: est.disponible,
+      en_evento: est.en_evento,
+      en_reparacion: est.en_reparacion,
+      total: est.total,
+    })
+    onCambio?.()
+  }
+
+  const { disponible, en_evento, en_reparacion, total } = buckets
   const reservado = producto.reservado ?? 0
+  // disponible_real = disponible − reservas activas (las acciones no tocan reservas).
+  const disponibleReal = Math.max(0, disponible - reservado)
 
   return createPortal(
     <div className="modal-overlay" onClick={onClose} role="presentation">
@@ -152,10 +173,14 @@ export function ProductModal({ producto, categoria, onClose }: ProductModalProps
               </dl>
             </section>
 
-            <p className="modal__solo-lectura">
-              Solo consulta. Las acciones de stock (reparación, baja, ajuste) llegan en un
-              próximo módulo.
-            </p>
+            <AccionesEstado
+              productoId={producto.id!}
+              productoNombre={nombre}
+              disponible={disponible}
+              en_evento={en_evento}
+              en_reparacion={en_reparacion}
+              onEstado={aplicarEstado}
+            />
           </div>
         </div>
       </div>

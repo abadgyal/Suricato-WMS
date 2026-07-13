@@ -183,6 +183,7 @@ export function Inventario() {
           producto={ficha}
           categoria={ficha.categoria_id ? categorias.get(ficha.categoria_id) : undefined}
           onClose={() => setFicha(null)}
+          onCambio={recargar}
         />
       )}
 
