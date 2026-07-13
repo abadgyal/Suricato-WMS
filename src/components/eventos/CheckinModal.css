@@ -1,0 +1,111 @@
+/* Check-in de devolución: una fila por producto que sigue fuera, con el reparto
+   OK / roto / perdido y las unidades que quedarían pendientes. */
+
+.checkin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.checkin__intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.checkin__tabla-scroll {
+  overflow-x: auto;
+}
+
+.checkin__tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.checkin__tabla th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.checkin__tabla td {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.checkin__col-num {
+  text-align: right;
+  width: 96px;
+}
+
+.checkin__tabla th.checkin__col-num {
+  text-align: right;
+}
+
+.checkin__producto {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.checkin__input {
+  width: 76px;
+  padding: 7px 8px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Los tres destinos se distinguen por color: el mismo código que los buckets. */
+.checkin__input--ok:not(:placeholder-shown) {
+  border-color: var(--bucket-disponible);
+  background-color: var(--bucket-disponible-tint);
+}
+
+.checkin__input--roto:not(:placeholder-shown) {
+  border-color: var(--bucket-en-reparacion);
+  background-color: var(--bucket-en-reparacion-tint);
+}
+
+.checkin__input--perdido:not(:placeholder-shown) {
+  border-color: var(--bucket-baja);
+  background-color: var(--bucket-baja-tint);
+}
+
+.checkin__fila--error td {
+  background-color: var(--bucket-baja-tint);
+}
+
+.checkin__pendientes--error {
+  color: var(--bucket-baja);
+  font-weight: 600;
+}
+
+.checkin__todo-ok {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.checkin__todo-ok:hover:not(:disabled) {
+  border-color: var(--bucket-disponible);
+  color: var(--bucket-disponible);
+}
+
+.checkin__motivo {
+  padding: var(--space-3);
+  background-color: var(--bucket-baja-tint);
+  border-radius: var(--radius-md);
+}
