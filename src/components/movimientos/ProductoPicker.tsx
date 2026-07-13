@@ -27,6 +27,10 @@ interface ProductoPickerProps {
  * Autocompletado de producto: muestra foto, categoría y stock de cada coincidencia.
  * Al elegir uno, lo presenta como tarjeta con opción de cambiarlo. Es de solo
  * selección; los formularios deciden qué hacer con el producto elegido.
+ *
+ * La pantalla arranca limpia: las sugerencias **no** se precargan. El desplegable
+ * se abre cuando el usuario hace clic en el campo, escribe, o pulsa ↓ (equivalente
+ * por teclado). Recibir el foco por sí solo (`autoFocus`) no lo despliega.
  */
 export function ProductoPicker({
   productos,
@@ -77,7 +81,16 @@ export function ProductoPicker({
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
-    if (!abierto) return
+    // Con el desplegable cerrado, la flecha abajo lo abre (equivalente por
+    // teclado al clic en el campo). El resto de teclas no lo despliegan: escribir
+    // ya lo abre desde `cambiarTexto`.
+    if (!abierto) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setAbierto(true)
+      }
+      return
+    }
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       setActivo((i) => Math.min(i + 1, coincidencias.length - 1))
@@ -133,7 +146,7 @@ export function ProductoPicker({
           aria-label={etiqueta}
           autoFocus={autoFocus}
           onChange={(e) => cambiarTexto(e.target.value)}
-          onFocus={() => setAbierto(true)}
+          onClick={() => setAbierto(true)}
           onKeyDown={onKeyDown}
           role="combobox"
           aria-expanded={abierto}
