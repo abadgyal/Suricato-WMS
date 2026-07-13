@@ -1,18 +1,30 @@
+/* Esqueleto de la app. Regla: la ventana NO scrollea nunca; el sidebar queda
+   fijo ocupando el alto de la ventana y el único que scrollea es el contenido.
+   `100dvh` en vez de `height: 100%` para no depender de la cadena de alturas
+   html → body → #root (y para respetar la barra de navegación en móvil). */
 .layout {
   display: flex;
-  height: 100%;
+  height: 100dvh;
+  overflow: hidden;
   background-color: var(--color-canvas);
 }
 
 .layout__sidebar {
   height: 100%;
+  flex-shrink: 0;
 }
 
+/* `position: relative` es funcional, no cosmético: es el bloque contenedor de
+   los descendientes `position: absolute` (p. ej. `.sr-only`, que oculta el input
+   de archivo del alta de producto). Sin él, esos elementos cuelgan del documento
+   —no del área de scroll—, estiran el alto de la página y arrastran el sidebar
+   dejando un hueco muerto debajo del contenido. */
 .layout__main {
   flex: 1;
   min-width: 0;
   height: 100%;
   overflow-y: auto;
+  position: relative;
 }
 
 /* Barra superior: oculta en escritorio, visible en móvil. */
@@ -55,10 +67,18 @@
     font-size: 16px;
   }
 
+  /* En columna, el contenido ocupa lo que deja la barra superior (no el 100%
+     de la ventana: eso sumaría el alto de la barra y desbordaría). */
+  .layout__main {
+    height: auto;
+    min-height: 0;
+  }
+
   .layout__sidebar {
     position: fixed;
     top: 0;
     left: 0;
+    height: 100dvh;
     z-index: 50;
     transform: translateX(-100%);
     transition: transform 0.22s ease;

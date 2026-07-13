@@ -252,6 +252,15 @@
   gap: var(--space-4);
 }
 
+/* El marcador `thumb--lg` es `width: 100%` (pensado para la ficha, en columna).
+   Aquí va en una fila: se acota al mismo cuadro que la previsualización (96px)
+   para que no se coma el ancho y empuje los botones fuera de la tarjeta. */
+.mov-form__foto .thumb {
+  width: 96px;
+  height: 96px;
+  aspect-ratio: auto;
+}
+
 .mov-form__foto-preview {
   width: 96px;
   height: 96px;
