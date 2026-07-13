@@ -186,7 +186,7 @@ begin
     exception when others then
       -- Se re-lanza: aborta la función entera y con ella las líneas anteriores.
       v_err := sqlerrm;
-      raise exception '%. Falló en «%» (% unidades): no se ha materializado ninguna reserva del evento.',
+      raise exception '%. Falló en «%» (unidades: %): no se ha materializado ninguna reserva del evento.',
         v_err, v_linea.nombre, v_linea.unidades;
     end;
 
