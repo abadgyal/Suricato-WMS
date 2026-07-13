@@ -141,26 +141,38 @@ Registro completo e inmutable: entrada, salida a evento, devolución, ajuste, ba
 
 ## 11. Clientes
 
-Cartera con visibilidad de material, reservas e historial.
+Cartera con visibilidad de material, eventos e historial.
 
-- Árbol jerárquico en el menú lateral (con indentación e iniciales).
-- Ficha: datos de contacto editables; reservas activas del cliente; **stock
-  asignado** (productos con `cliente_id` = cliente); historial de
+- **Lista plana** con buscador *(decidido en S-F: no hay árbol de clientes — los
+  "hijos" de un cliente son sus eventos, no otros clientes)*. Por cliente: color,
+  contacto, si tiene material fuera ahora y cuántos eventos próximos.
+- **Color propio** de una paleta apagada, asignado automáticamente al crearlo y
+  cambiable desde la ficha. Se usa en las barras del calendario y en los chips de
+  cliente (listado, ficha de evento, historial), **no** en la tabla de inventario.
+- Ficha: datos de contacto editables y selector de color; **eventos en curso** (los
+  que tienen material suyo fuera ahora, con qué material y cuántas unidades);
+  **eventos próximos** (planificados, con su material reservado); **eventos pasados**;
+  **stock asignado** (productos con `cliente_id` = cliente); e **historial** de
   movimientos del cliente.
 
 ## 12. Categorías
 
-- Gestionadas por el admin. Predefinidas: Audio, Vídeo, Iluminación, Estructuras,
-  Consumibles, Otros.
-- Color propio, estable y determinista por categoría.
-- Se asignan al registrar entradas; el inventario y el dashboard filtran/desglosan
-  por categoría.
+- Gestión (crear, editar, eliminar) **abierta a cualquier usuario autenticado**
+  *(S-F; la RLS se relajó en S-D y el borrado en S-F)*. Predefinidas: Audio, Vídeo,
+  Iluminación, Estructuras, Consumibles, Otros.
+- Color propio, estable y determinista por nombre; se puede cambiar dentro de la
+  paleta de categorías.
+- Se asignan al registrar entradas — y se pueden **crear en línea** desde el propio
+  formulario de Entrada; el inventario y el dashboard filtran/desglosan por categoría.
+- **Al eliminar una categoría, sus productos NO se borran: quedan sin categoría** y
+  se pueden reasignar. El histórico de movimientos no se toca (DOMAIN §3.2).
 
 ## 13. Panel de administración (solo admin)
 
 - **Usuarios** (`perfil`): crear (email, nombre, contraseña, rol) vía Edge Function
-  con service role, listar, dar de baja lógica (excepto el `es_principal`).
-- **Categorías**: añadir y eliminar (chips de color).
+  con service role, listar con su rol y estado (activo / dado de baja), y dar de baja
+  lógica (excepto el `es_principal`, que ni siquiera muestra el botón — invariante 8).
+- Las **categorías** tienen pantalla propia (§12) y no son solo del admin.
 
 ## 14. Características transversales
 

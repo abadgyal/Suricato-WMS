@@ -181,7 +181,7 @@ export function Inventario() {
       {ficha && (
         <ProductModal
           producto={ficha}
-          categoria={ficha.categoria_id ? categorias.get(ficha.categoria_id) : undefined}
+          categorias={categorias}
           onClose={() => setFicha(null)}
           onCambio={recargar}
         />

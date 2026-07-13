@@ -262,6 +262,42 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
   `salida_evento` y documentarlo en CONTRACTS §2.4.
 - **Fecha:** 2026-07-13.
 
+### [S-F] Cuentas de prueba creadas en la BD remota (hay que limpiarlas)
+- **Qué:** para poder verificar S-F en el navegador se tocó `auth.users` del proyecto
+  remoto: (1) se dio contraseña a las **cuentas demo** del seed
+  (`admin.demo@suricato.local` y `trabajador.demo@suricato.local`, que nacieron sin
+  contraseña en la migración puente de S-B) y se les creó su fila en
+  `auth.identities`; (2) se dio de alta desde el panel el usuario
+  **`trabajador.sf@suricato.local`** ("Trabajador Prueba SF"). Las tres tienen la
+  contraseña `SuricatoTest2026!`.
+- **Por qué:** no había ninguna credencial con la que entrar en la app para probar
+  el flujo completo (alta de usuario, permisos de trabajador, fichas).
+- **Cuándo se resuelve:** **antes de producción (S-G)**. Dar de baja a "Trabajador
+  Prueba SF" desde el panel y quitar las contraseñas de las cuentas demo
+  (`update auth.users set encrypted_password = null where email like '%.demo@suricato.local'`),
+  o borrarlas si el histórico de ejemplo ya no hace falta.
+- **Fecha:** 2026-07-13.
+
+### [S-F] `cliente.parent_id` queda en la BD sin uso
+- **Qué:** la cartera es una lista plana (decisión de S-F): la UI ignora `parent_id`
+  y no hay forma de crear ni ver jerarquías. La columna, su FK y su índice siguen en
+  la BD, y el seed la usa ("Delegación Norte" cuelga de "Productora Nacional").
+- **Por qué:** quitarla es una migración destructiva sin beneficio funcional ahora, y
+  el modelo de DOMAIN la sigue documentando.
+- **Cuándo se resuelve:** S-G, si se confirma que no hará falta: se elimina la columna
+  (y la nota de DOMAIN §3.4). Si vuelve el árbol, ya está el soporte.
+- **Fecha:** 2026-07-13.
+
+### [S-F] La ficha de cliente lee el catálogo entero de productos
+- **Qué:** `useCliente` trae `v_producto_disponible` completa para resolver los
+  nombres del material fuera/reservado y filtrar los productos asignados, en vez de
+  pedir solo los ids implicados.
+- **Por qué:** el catálogo actual son decenas de referencias y la vista ya se lee en
+  otras pantallas; una lectura más es más simple que N embeds anidados.
+- **Cuándo se resuelve:** si el catálogo crece a miles de referencias (mismo umbral
+  que la deuda de Realtime de S-C): filtrar por `in(ids)`.
+- **Fecha:** 2026-07-13.
+
 ### [S-E] `v_conflictos_reserva` compara por pares y contra `disponible`
 - **Qué:** la vista (S-A) detecta conflictos entre **pares** de eventos solapados cuya
   suma de reservas supera el bucket `disponible`. No cubre tres o más eventos que, a la

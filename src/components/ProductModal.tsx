@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Categoria, ProductoDisponible } from '../lib/domain'
+import { supabase } from '../lib/supabase'
 import { fotoUrl, formatFecha, formatFechaHora, formatMedida } from '../lib/format'
 import type { EstadoStock } from '../lib/rpc'
+import { useToast } from './toast/useToast'
 import { StockBar } from './StockBar'
 import { BucketNumbers } from './BucketNumbers'
 import { CategoryChip } from './CategoryChip'
@@ -15,17 +17,52 @@ import './ProductModal.css'
 
 interface ProductModalProps {
   producto: ProductoDisponible
-  categoria?: Categoria
+  /** Catálogo de categorías: permite ver la suya y reasignarla. */
+  categorias: Map<string, Categoria>
   onClose: () => void
   /** Se llama tras una acción de estado con éxito (para refrescar la lista). */
   onCambio?: () => void
 }
 
 /** Ficha de producto en modal con acciones de estado (reparado / baja). */
-export function ProductModal({ producto, categoria, onClose, onCambio }: ProductModalProps) {
+export function ProductModal({ producto, categorias, onClose, onCambio }: ProductModalProps) {
+  const toast = useToast()
   const [lightbox, setLightbox] = useState(false)
   const foto = fotoUrl(producto.foto_path)
   const nombre = producto.nombre ?? 'Producto'
+
+  // Categoría editable: un producto puede quedarse sin categoría si se borró la
+  // suya (DOMAIN §3.2), y desde aquí se le asigna otra. Es metadato, no bucket:
+  // va por UPDATE directo bajo RLS (CONTRACTS §3).
+  const [categoriaId, setCategoriaId] = useState(producto.categoria_id ?? '')
+  const [guardandoCat, setGuardandoCat] = useState(false)
+  const categoria = categoriaId ? categorias.get(categoriaId) : undefined
+  const categoriasOrdenadas = [...categorias.values()].sort((a, b) =>
+    a.nombre.localeCompare(b.nombre, 'es'),
+  )
+
+  async function cambiarCategoria(nuevaId: string) {
+    const anterior = categoriaId
+    setCategoriaId(nuevaId)
+    setGuardandoCat(true)
+    const { error } = await supabase
+      .from('producto')
+      .update({ categoria_id: nuevaId || null })
+      .eq('id', producto.id!)
+    setGuardandoCat(false)
+
+    if (error) {
+      setCategoriaId(anterior)
+      toast.error(error.message)
+      return
+    }
+    toast.exito(
+      nuevaId
+        ? `«${nombre}» pasa a la categoría «${categorias.get(nuevaId)?.nombre ?? ''}».`
+        : `«${nombre}» queda sin categoría.`,
+    )
+    onCambio?.()
+  }
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -96,6 +133,23 @@ export function ProductModal({ producto, categoria, onClose, onCambio }: Product
               {categoria && <CategoryChip nombre={categoria.nombre} color={categoria.color} />}
               <LocationChip ubicacion={producto.ubicacion} />
             </div>
+
+            <label className="modal__categoria campo">
+              <span className="campo__label">Categoría</span>
+              <select
+                className="select"
+                value={categoriaId}
+                disabled={guardandoCat}
+                onChange={(e) => void cambiarCategoria(e.target.value)}
+              >
+                <option value="">Sin categoría</option>
+                {categoriasOrdenadas.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <div className="modal__col-datos">
