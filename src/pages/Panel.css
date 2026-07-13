@@ -1,0 +1,251 @@
+.panel {
+  padding: var(--space-6) var(--space-5);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.panel__cab {
+  margin-bottom: var(--space-5);
+}
+
+.panel__cab h1 {
+  font-size: 26px;
+}
+
+.panel__sub {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+}
+
+/* --- Tarjetas de métricas --- */
+.panel__metricas {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.metrica__valor {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text);
+  line-height: 1.1;
+}
+
+.metrica__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.metrica__nota {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Banner de alerta de stock bajo --- */
+.panel__alerta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  background-color: var(--bucket-baja-tint);
+  border: 1px solid color-mix(in srgb, var(--bucket-baja) 30%, transparent);
+  border-radius: var(--radius-lg);
+  transition: border-color 0.15s ease;
+}
+
+.panel__alerta:hover {
+  border-color: var(--bucket-baja);
+}
+
+.panel__alerta-punto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--bucket-baja);
+  flex-shrink: 0;
+}
+
+.panel__alerta-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.panel__alerta-texto strong {
+  color: var(--bucket-baja);
+}
+
+.panel__alerta-texto span {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel__alerta-ir {
+  margin-left: auto;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--bucket-baja);
+  white-space: nowrap;
+}
+
+/* --- Columnas: recientes + categorías --- */
+.panel__cols {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--space-4);
+}
+
+.panel__bloque {
+  padding: var(--space-4);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel__bloque-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.panel__bloque-cab h2 {
+  font-size: 16px;
+}
+
+.panel__link {
+  color: var(--color-accent);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.panel__link:hover {
+  text-decoration: underline;
+}
+
+.panel__vacio {
+  margin: 0;
+  padding: var(--space-4) 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+/* --- Movimientos recientes --- */
+.panel__recientes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.reciente {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.reciente:last-child {
+  border-bottom: none;
+}
+
+.reciente__producto {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reciente__cant {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.reciente__fecha {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* --- Desglose por categoría --- */
+.panel__categorias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.cat-barra__cab {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.cat-barra__nombre {
+  font-weight: 600;
+}
+
+.cat-barra__valor {
+  color: var(--color-text-secondary);
+}
+
+.cat-barra__pista {
+  height: 8px;
+  border-radius: 999px;
+  background-color: var(--color-canvas);
+  overflow: hidden;
+}
+
+.cat-barra__relleno {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* --- Aviso de almacén vacío --- */
+.panel__inicio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 900px) {
+  .panel__metricas {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .panel__cols {
+    grid-template-columns: 1fr;
+  }
+}

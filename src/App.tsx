@@ -5,6 +5,7 @@ import { Login } from './pages/Login'
 import { Inventario } from './pages/Inventario'
 import { Movimientos } from './pages/Movimientos'
 import { Historial } from './pages/Historial'
+import { Panel } from './pages/Panel'
 import { Placeholder } from './pages/Placeholder'
 import './App.css'
 
@@ -41,15 +42,7 @@ export default function App() {
       <Route element={<RutaProtegida />}>
         <Route index element={<Navigate to="/inventario" replace />} />
         <Route path="/inventario" element={<Inventario />} />
-        <Route
-          path="/panel"
-          element={
-            <Placeholder
-              titulo="Panel"
-              descripcion="Métricas en tiempo real, alertas de stock bajo y desglose por categoría. Llega en el próximo módulo."
-            />
-          }
-        />
+        <Route path="/panel" element={<Panel />} />
         <Route path="/movimientos" element={<Movimientos />} />
         <Route path="/historial" element={<Historial />} />
         <Route
