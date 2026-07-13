@@ -4,6 +4,7 @@ import { Layout } from './components/Layout'
 import { Login } from './pages/Login'
 import { Inventario } from './pages/Inventario'
 import { Movimientos } from './pages/Movimientos'
+import { Historial } from './pages/Historial'
 import { Placeholder } from './pages/Placeholder'
 import './App.css'
 
@@ -50,6 +51,7 @@ export default function App() {
           }
         />
         <Route path="/movimientos" element={<Movimientos />} />
+        <Route path="/historial" element={<Historial />} />
         <Route
           path="/reservas"
           element={

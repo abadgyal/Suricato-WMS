@@ -63,6 +63,17 @@ export function IconReservas(p: IconProps) {
   )
 }
 
+/** Historial — reloj con aguja (registro en el tiempo). */
+export function IconHistorial(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M3.05 11a9 9 0 1 1 .5 4" />
+      <path d="M3 20v-5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  )
+}
+
 export function IconBuscar(p: IconProps) {
   return (
     <svg {...base(p)}>

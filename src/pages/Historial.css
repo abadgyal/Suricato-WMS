@@ -1,0 +1,148 @@
+.historial {
+  padding: var(--space-6) var(--space-5);
+}
+
+.historial__cab {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.historial__cab h1 {
+  font-size: 26px;
+}
+
+.historial__sub {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+}
+
+.historial__buscador {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 12px;
+  min-width: 280px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+}
+
+.historial__buscador:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.historial__buscador-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 10px 0;
+  color: var(--color-text);
+}
+
+.historial__filtros {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.historial__filtro {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+.historial__filtro:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.historial__filtro--activo {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.historial__panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.historial__tabla-scroll {
+  overflow-x: auto;
+}
+
+.historial__tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.historial__tabla th,
+.historial__tabla td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.historial__tabla th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  background-color: var(--color-canvas);
+}
+
+.historial__tabla tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.historial__tabla tbody tr:hover {
+  background-color: var(--color-accent-tint);
+}
+
+.historial__col-num {
+  text-align: right;
+}
+
+.historial__producto {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.historial__ajuste {
+  color: var(--color-text-secondary);
+}
+
+.historial__ajuste strong {
+  color: var(--color-text);
+}
+
+.historial__motivo {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-secondary);
+}
+
+.historial__fecha {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}

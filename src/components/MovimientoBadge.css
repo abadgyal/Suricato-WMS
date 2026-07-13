@@ -1,0 +1,19 @@
+.mov-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--mov-color);
+  background-color: color-mix(in srgb, var(--mov-color) 12%, transparent);
+}
+
+.mov-badge__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--mov-color);
+}
