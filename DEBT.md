@@ -97,6 +97,8 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Por qué:** S-B cierra permisos; el flujo de cancelación es del ciclo de alquiler.
 - **Cuándo se resuelve:** S-E (Reservas/Eventos/Devolución): RPC `cancelar_reserva`.
 - **Fecha:** 2026-07-09.
+- **Estado:** ✅ RESUELTA en S-E (2026-07-13). RPC `cancelar_reserva` (CONTRACTS §2.9),
+  `SECURITY DEFINER`, WMS004 si la reserva no está activa, sin movimiento de stock.
 
 ### [S-C] Realtime revalida el inventario completo ante cualquier cambio
 - **Qué:** `useInventario` se suscribe a `postgres_changes` de la tabla `producto` y,
@@ -183,4 +185,74 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
   funciona y está probado a mano.
 - **Cuándo se resuelve:** migrar `useInventario` a `useRealtime` en un pase de limpieza
   (S-G), unificando una sola implementación.
+- **Fecha:** 2026-07-13.
+- **Estado:** ✅ RESUELTA en S-E (2026-07-13). `useInventario` usa ya `useRealtime`
+  (conservando su debounce de 250 ms) y escucha también `reserva`.
+
+### [S-E] `dar_de_baja` desde `en_evento` descuadra `v_unidades_fuera_evento`
+- **Qué:** dar de baja unidades cuyo bucket de origen es `en_evento` baja el contador
+  `producto.en_evento`, pero **no** escribe un movimiento con `evento_id`. La vista
+  `v_unidades_fuera_evento` (= Σ salidas − Σ devoluciones, CONTRACTS §1.4) sigue
+  contando esas unidades como fuera de su evento. Consecuencias: el evento nunca llega
+  a "0 fuera" (y la UI no ofrece cerrarlo), y una devolución posterior podría pasar la
+  validación WMS005 y chocar contra el CHECK de `en_evento >= 0`.
+- **Por qué:** hueco de diseño heredado (`dar_de_baja` es de S-A y no conoce eventos);
+  el camino correcto para perder material de un evento es `devolver` con `p_perdido`,
+  que sí registra el movimiento con `evento_id`. La UI de S-E solo ofrece ese camino.
+- **Cuándo se resuelve:** añadir `p_evento_id` opcional a `dar_de_baja` (y exigirlo
+  cuando el origen sea `en_evento`), o prohibir ese bucket como origen y remitir a
+  `devolver`. Decisión de producto: hablarlo antes de tocarlo. **No es teórico:** la
+  ficha de producto (S-D) permite hoy dar de baja desde `en_evento`.
+- **Fecha:** 2026-07-13.
+
+### [S-E] El check-in no es atómico entre productos
+- **Qué:** el check-in llama a `devolver` una vez por producto con unidades. Cada
+  llamada es su propia transacción: si la tercera línea falla, las dos primeras ya
+  están registradas. La UI lo dice explícitamente en el aviso de error.
+- **Por qué:** `devolver` (CONTRACTS §2.5) es por producto, y la atomicidad se exigió
+  solo en `cumplir_evento`. Una devolución parcial es un estado válido del dominio
+  (el material vuelve a plazos), así que media devolución registrada no es incoherente.
+- **Cuándo se resuelve:** si el negocio lo pide, una RPC `devolver_evento(lineas jsonb)`
+  que envuelva las líneas en una sola transacción, al estilo de `cumplir_evento`.
+- **Fecha:** 2026-07-13.
+
+### [S-E] Cerrar un evento no está protegido en la base de datos
+- **Qué:** `evento.estado` se escribe por CRUD directo bajo RLS. La UI solo ofrece
+  "Cerrar evento" cuando `v_unidades_fuera_evento` no devuelve nada para ese evento,
+  pero la BD aceptaría un `UPDATE ... estado='cerrado'` con material fuera.
+- **Por qué:** no se añadió un trigger de guardia para no dejar eventos irrecuperables:
+  con la deuda de `dar_de_baja` de arriba, un evento podría quedar con "material fuera"
+  fantasma y no poder cerrarse nunca.
+- **Cuándo se resuelve:** junto con la deuda de `dar_de_baja`, y entonces sí un trigger
+  (o una RPC `cerrar_evento`) que impida cerrar con material fuera.
+- **Fecha:** 2026-07-13.
+
+### [S-E] Cancelar un evento no tiene flujo
+- **Qué:** el enum `estado_evento` incluye `cancelado` (DOMAIN §3.5) pero la UI no lo
+  ofrece. Cancelar debería además liberar las reservas activas del evento (si no,
+  seguirían bloqueando `disponible_real` de un evento que no se celebra).
+- **Por qué:** el prompt de S-E no lo pedía y hacerlo bien implica decidir si la
+  cancelación arrastra las reservas (y si eso es una RPC nueva o N `cancelar_reserva`).
+- **Cuándo se resuelve:** S-F/S-G, o antes si el negocio lo necesita.
+- **Fecha:** 2026-07-13.
+
+### [S-E] La salida directa a evento no arranca el evento
+- **Qué:** `cumplir_reserva` y `cumplir_evento` pasan el evento de `planificado` a
+  `en_curso`; la `salida_evento` directa (S-D) no. Un evento puede tener material fuera
+  y seguir figurando como `planificado`.
+- **Por qué:** el prompt de S-E pedía el cambio de estado en el camino de cumplir; tocar
+  la semántica de `salida_evento` (CONTRACTS §2.4) se salía del encargo.
+- **Cuándo se resuelve:** decisión de una línea — añadir el mismo `update evento` a
+  `salida_evento` y documentarlo en CONTRACTS §2.4.
+- **Fecha:** 2026-07-13.
+
+### [S-E] `v_conflictos_reserva` compara por pares y contra `disponible`
+- **Qué:** la vista (S-A) detecta conflictos entre **pares** de eventos solapados cuya
+  suma de reservas supera el bucket `disponible`. No cubre tres o más eventos que, a la
+  vez, sobrepasan el stock sin que ningún par lo haga; y compara contra `disponible`, no
+  contra el `disponible_real` del resto del calendario.
+- **Por qué:** es la vista que fija CONTRACTS §4 y cumple el objetivo del sprint (avisar
+  de solapes que no caben). Redefinirla es un cambio de contrato.
+- **Cuándo se resuelve:** si aparecen falsos negativos en uso real, reescribirla como
+  agregado por producto y ventana de fechas en vez de por pares.
 - **Fecha:** 2026-07-13.
