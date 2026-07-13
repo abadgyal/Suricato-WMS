@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Categoria, ProductoDisponible } from '../lib/domain'
+import { useRealtime } from './useRealtime'
 
 export interface InventarioState {
   productos: ProductoDisponible[]
@@ -15,15 +16,17 @@ export interface InventarioState {
 }
 
 /**
- * Lee el inventario de la vista `v_producto_disponible` + las categorías, y se
- * suscribe por Realtime a la tabla `producto`. Las vistas no emiten Realtime, así
- * que escuchamos la tabla base y revalidamos la vista ante cualquier cambio
- * (INSERT/UPDATE/DELETE) hecho desde cualquier cliente.
+ * Lee el inventario de la vista `v_producto_disponible` + las categorías y lo
+ * mantiene vivo por Realtime. Las vistas no emiten Realtime, así que se escuchan
+ * las tablas base y se revalida la vista entera ante cualquier cambio:
  *
- * `producto` tiene RLS: para que el canal reciba los cambios hay que autenticar
- * el socket de Realtime con el token del usuario (`realtime.setAuth`). Sin esto
- * el canal va como `anon` y RLS no deja ver ninguna fila, así que no llega nada.
- * Nos re-suscribimos si la sesión cambia (login / refresco de token / logout).
+ *   * `producto` — los buckets (entradas, salidas, ajustes, bajas).
+ *   * `reserva`  — una reserva no toca `producto`, pero cambia `disponible_real`
+ *     y con él la alerta de stock mínimo (DOMAIN §1). Sin esto, reservar desde
+ *     otra pantalla dejaba el inventario mintiendo hasta recargar (S-E).
+ *
+ * La suscripción autenticada y la re-suscripción por sesión las resuelve
+ * `useRealtime` (deuda [S-D]: antes esto tenía su propia copia del canal).
  */
 export function useInventario(): InventarioState {
   const [productos, setProductos] = useState<ProductoDisponible[]>([])
@@ -67,54 +70,19 @@ export function useInventario(): InventarioState {
 
   useEffect(() => {
     void cargar()
-
-    // Revalidación con pequeño debounce: varias mutaciones seguidas (p. ej. una
-    // RPC que toca varias filas) disparan una sola relectura.
-    let debounce: ReturnType<typeof setTimeout> | undefined
-    const revalidar = () => {
-      clearTimeout(debounce)
-      debounce = setTimeout(() => void cargar(), 250)
-    }
-
-    let canal: ReturnType<typeof supabase.channel> | null = null
-    let cancelado = false
-
-    // Autentica el socket de Realtime con el token de la sesión y (re)crea el
-    // canal. Se llama al montar y cada vez que cambia la sesión.
-    async function conectarRealtime() {
-      if (canal) {
-        await supabase.removeChannel(canal)
-        canal = null
-      }
-      const { data } = await supabase.auth.getSession()
-      const token = data.session?.access_token
-      if (!token || cancelado) return
-
-      // Token del usuario → el canal se une autenticado y RLS de `producto`
-      // deja pasar los cambios (postgres_changes se autoriza con este token).
-      await supabase.realtime.setAuth(token)
-      if (cancelado) return
-
-      canal = supabase
-        .channel('inventario-producto')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'producto' }, revalidar)
-        .subscribe()
-    }
-
-    void conectarRealtime()
-
-    // Re-suscribe si la sesión cambia (login, refresco de token, logout).
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      void conectarRealtime()
-    })
-
-    return () => {
-      cancelado = true
-      clearTimeout(debounce)
-      sub.subscription.unsubscribe()
-      if (canal) void supabase.removeChannel(canal)
-    }
   }, [cargar])
+
+  // Revalidación con pequeño debounce: varias mutaciones seguidas (p. ej. un
+  // cumplir_evento que mueve varias filas) disparan una sola relectura.
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const revalidar = useCallback(() => {
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => void cargar(), 250)
+  }, [cargar])
+
+  useEffect(() => () => clearTimeout(debounceRef.current), [])
+
+  useRealtime(['producto', 'reserva'], revalidar)
 
   return { productos, categorias, cargando, error, recargar: () => void cargar(), actualizando }
 }

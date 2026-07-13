@@ -10,7 +10,12 @@ export interface DashboardMetricas {
   /** Unidades en stock = suma del total operativo (disponible+en_evento+en_reparacion). */
   unidadesStock: number
   movimientosHoy: number
+  /** Reservas que bloquean `disponible_real` ahora mismo (aún no han salido). */
   reservasActivas: number
+  /** Eventos con material fuera (estado `en_curso`). */
+  eventosEnCurso: number
+  /** Unidades que están fuera, en algún evento (suma del bucket `en_evento`). */
+  unidadesFuera: number
   clientes: number
 }
 
@@ -29,14 +34,20 @@ const METRICAS_VACIAS: DashboardMetricas = {
   unidadesStock: 0,
   movimientosHoy: 0,
   reservasActivas: 0,
+  eventosEnCurso: 0,
+  unidadesFuera: 0,
   clientes: 0,
 }
 
 /**
  * Reúne los datos del panel (SPEC §2/§3). No hay vista de métricas en la BD, así
  * que se agregan en cliente a partir de la vista de inventario, la vista de stock
- * por categoría y conteos de movimientos de hoy, reservas activas y clientes.
- * Se refresca en vivo ante cambios en producto y movimiento.
+ * por categoría y conteos de movimientos de hoy, reservas activas, eventos en
+ * curso y clientes.
+ *
+ * Escucha también `evento` y `reserva` (S-E): reservar o cumplir un evento
+ * cambia las reservas activas y la alerta de mínimo (vía `disponible_real`) sin
+ * que llegue a haber, por sí solo, un cambio en `producto`.
  */
 export function useDashboard(): DashboardState {
   const [metricas, setMetricas] = useState<DashboardMetricas>(METRICAS_VACIAS)
@@ -52,7 +63,7 @@ export function useDashboard(): DashboardState {
     const inicioDia = new Date()
     inicioDia.setHours(0, 0, 0, 0)
 
-    const [prod, cat, movHoy, reservas, clientes] = await Promise.all([
+    const [prod, cat, movHoy, reservas, eventos, clientes] = await Promise.all([
       supabase.from('v_producto_disponible').select('*'),
       supabase.from('v_stock_por_categoria').select('*').order('total', { ascending: false }),
       supabase
@@ -63,13 +74,17 @@ export function useDashboard(): DashboardState {
         .from('reserva')
         .select('id', { count: 'exact', head: true })
         .eq('estado', 'activa'),
+      supabase
+        .from('evento')
+        .select('id', { count: 'exact', head: true })
+        .eq('estado', 'en_curso'),
       supabase.from('cliente').select('id', { count: 'exact', head: true }),
     ])
 
     if (id !== cargaRef.current) return
 
     const err =
-      prod.error || cat.error || movHoy.error || reservas.error || clientes.error
+      prod.error || cat.error || movHoy.error || reservas.error || eventos.error || clientes.error
     if (err) {
       setError(err.message)
       setCargando(false)
@@ -83,6 +98,8 @@ export function useDashboard(): DashboardState {
       unidadesStock: productos.reduce((s, p) => s + (p.total ?? 0), 0),
       movimientosHoy: movHoy.count ?? 0,
       reservasActivas: reservas.count ?? 0,
+      eventosEnCurso: eventos.count ?? 0,
+      unidadesFuera: productos.reduce((s, p) => s + (p.en_evento ?? 0), 0),
       clientes: clientes.count ?? 0,
     })
     setBajoMinimo(productos.filter((p) => p.bajo_minimo))
@@ -94,7 +111,7 @@ export function useDashboard(): DashboardState {
     void cargar()
   }, [cargar])
 
-  useRealtime(['producto', 'movimiento'], cargar)
+  useRealtime(['producto', 'movimiento', 'evento', 'reserva'], cargar)
 
   return { metricas, bajoMinimo, categorias, cargando, error, recargar: () => void cargar() }
 }

@@ -7,14 +7,31 @@ import { formatFechaHora } from '../lib/format'
 import { IconInventario } from '../components/icons'
 import './Panel.css'
 
-/** Tarjeta de métrica del panel. */
-function Metrica({ valor, label, nota }: { valor: number; label: string; nota?: string }) {
-  return (
-    <div className="metrica">
+/** Tarjeta de métrica del panel. Si lleva `to`, es un atajo a esa pantalla. */
+function Metrica({
+  valor,
+  label,
+  nota,
+  to,
+}: {
+  valor: number
+  label: string
+  nota?: string
+  to?: string
+}) {
+  const contenido = (
+    <>
       <span className="metrica__valor tnum">{valor}</span>
       <span className="metrica__label">{label}</span>
       {nota && <span className="metrica__nota">{nota}</span>}
-    </div>
+    </>
+  )
+  return to ? (
+    <Link to={to} className="metrica metrica--enlace">
+      {contenido}
+    </Link>
+  ) : (
+    <div className="metrica">{contenido}</div>
   )
 }
 
@@ -45,7 +62,18 @@ export function Panel() {
         <Metrica valor={metricas.referencias} label="Referencias" nota="productos distintos" />
         <Metrica valor={metricas.unidadesStock} label="Unidades en stock" nota="total operativo" />
         <Metrica valor={metricas.movimientosHoy} label="Movimientos hoy" />
-        <Metrica valor={metricas.reservasActivas} label="Reservas activas" />
+        <Metrica
+          valor={metricas.reservasActivas}
+          label="Reservas activas"
+          nota="bloquean disponible"
+          to="/eventos"
+        />
+        <Metrica
+          valor={metricas.eventosEnCurso}
+          label="Eventos en curso"
+          nota={`${metricas.unidadesFuera} uds. fuera`}
+          to="/eventos"
+        />
         <Metrica valor={metricas.clientes} label="Clientes" />
       </section>
 
