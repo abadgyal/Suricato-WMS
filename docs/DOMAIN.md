@@ -83,12 +83,24 @@ cuelga de `auth.users` (mismo `id`) y guarda el rol y los datos de negocio.
 
 Predefinidas: Audio, Vídeo, Iluminación, Estructuras, Consumibles, Otros.
 
+> **Color (S-F).** Si el alta no indica color, lo asigna el trigger
+> `trg_categoria_color`, determinista **por nombre** (`wms_color_categoria`), de la
+> paleta viva de categorías. Esto es lo que permite crear una categoría en línea
+> desde el formulario de Entrada sin pedir un color.
+
+> **Borrado (S-F).** Una categoría se puede eliminar (cualquier autenticado). Sus
+> **productos no se borran: quedan sin categoría** (`producto.categoria_id` → NULL,
+> `ON DELETE SET NULL`). El histórico de `movimiento` no referencia categorías, así
+> que no se ve afectado. El inventario y el dashboard muestran esos productos como
+> "Sin categoría" (fila propia en `v_stock_por_categoria`) y se les puede reasignar
+> una categoría desde la ficha de producto.
+
 ### 3.3 producto
 | Campo                  | Tipo      | Notas                                          |
 |------------------------|-----------|------------------------------------------------|
 | `id`                   | uuid PK   |                                                |
 | `nombre`               | text      |                                                |
-| `categoria_id`         | uuid FK   | → categoria                                    |
+| `categoria_id`         | uuid FK NULL | → categoria. **(S-F)** NULL = sin categoría (p. ej. si se borró la suya). |
 | `foto_path`            | text NULL | Ruta en Supabase Storage (bucket `productos`). |
 | `stock_minimo`         | int       | Umbral de alerta. Default 5.                   |
 | `ubicacion`            | text NULL | Estantería / pasillo / zona.                   |

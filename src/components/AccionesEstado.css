@@ -62,11 +62,4 @@
   flex: 1;
 }
 
-.boton--baja {
-  background-color: var(--bucket-baja);
-  color: #fff;
-}
-
-.boton--baja:hover:not(:disabled) {
-  background-color: #b83e3e;
-}
+/* El botón `.boton--baja` vive en styles/ui.css: lo usan varias pantallas. */

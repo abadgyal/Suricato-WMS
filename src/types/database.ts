@@ -280,7 +280,7 @@ export type Database = {
           alto_cm: number | null
           ancho_cm: number | null
           baja_acumulada: number
-          categoria_id: string
+          categoria_id: string | null
           cliente_id: string | null
           creado_en: string
           disponible: number
@@ -299,7 +299,7 @@ export type Database = {
           alto_cm?: number | null
           ancho_cm?: number | null
           baja_acumulada?: number
-          categoria_id: string
+          categoria_id?: string | null
           cliente_id?: string | null
           creado_en?: string
           disponible?: number
@@ -318,7 +318,7 @@ export type Database = {
           alto_cm?: number | null
           ancho_cm?: number | null
           baja_acumulada?: number
-          categoria_id?: string
+          categoria_id?: string | null
           cliente_id?: string | null
           creado_en?: string
           disponible?: number

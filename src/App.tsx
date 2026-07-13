@@ -11,6 +11,7 @@ import { EventoFicha } from './pages/EventoFicha'
 import { Calendario } from './pages/Calendario'
 import { Clientes } from './pages/Clientes'
 import { ClienteFicha } from './pages/ClienteFicha'
+import { Categorias } from './pages/Categorias'
 import './App.css'
 
 /** Splash a pantalla completa mientras se resuelve la sesión persistida. */
@@ -54,6 +55,7 @@ export default function App() {
         <Route path="/calendario" element={<Calendario />} />
         <Route path="/clientes" element={<Clientes />} />
         <Route path="/clientes/:id" element={<ClienteFicha />} />
+        <Route path="/categorias" element={<Categorias />} />
         {/* Las reservas viven dentro de su evento: no tienen pantalla propia. */}
         <Route path="/reservas" element={<Navigate to="/eventos" replace />} />
       </Route>

@@ -40,6 +40,15 @@
   color: var(--color-accent);
 }
 
+/* Acción destructiva (dar de baja, eliminar). */
+.boton--baja {
+  background-color: var(--bucket-baja);
+  color: #fff;
+}
+.boton--baja:hover:not(:disabled) {
+  background-color: #b83e3e;
+}
+
 /* --- Campos de formulario --- */
 .campo {
   display: flex;

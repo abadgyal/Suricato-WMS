@@ -167,6 +167,12 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** S-F (gestión de categorías del admin) o antes si se define
   un generador de color determinista por nombre. La gestión de categorías es de S-F.
 - **Fecha:** 2026-07-13.
+- **Estado:** ✅ RESUELTA en S-F (2026-07-13). El color es determinista por nombre
+  (`wms_color_categoria`, migración `20260713120500_categorias_s_f.sql`) y lo asigna
+  un trigger si no se envía, así que el alta en línea no tiene que inventárselo. El
+  selector de categoría del formulario de Entrada ofrece "+ Crear categoría nueva…",
+  que abre el mismo formulario que la pantalla de Categorías y deja la nueva
+  seleccionada. Tests: `supabase/tests/05_clientes_categorias.sql`.
 
 ### [S-D] Historial limitado a los últimos 500 movimientos (sin paginación)
 - **Qué:** `useMovimientos` lee `.limit(500)` ordenado por fecha desc. Con más de 500

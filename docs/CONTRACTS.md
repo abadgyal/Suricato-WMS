@@ -59,16 +59,20 @@ entrega al cliente. Formato: `WMSNNN: mensaje`.
   stock — `registrar_entrada`, `salida_evento`, `crear_reserva`,
   `cumplir_reserva`, `devolver`, `marcar_reparado`, **`ajustar`** y
   **`dar_de_baja`** — más el historial y el dashboard. Lecturas. CRUD directo de
-  cliente y evento; **crear/editar categorías**; edición de metadatos de producto
-  (no buckets).
+  cliente y evento; **gestión completa de categorías (crear/editar/borrar)**;
+  edición de metadatos de producto (no buckets).
 - **solo admin**: gestión de usuarios — Edge Function `crear-usuario` y RPC
-  `desactivar_usuario` (WMS009 si no) — y **borrar** categorías.
+  `desactivar_usuario` (WMS009 si no).
 
 > **Actualizado (S-D):** el reparto de S-B se relaja. `ajustar` y `dar_de_baja`
 > pasan a estar abiertas a cualquier usuario autenticado (ya **no** lanzan WMS009
 > por rol; solo si no hay sesión). Las categorías se pueden crear/editar por
-> cualquier autenticado (el DELETE queda solo-admin). Lo único que sigue reservado
-> a admin es la gestión de usuarios.
+> cualquier autenticado.
+>
+> **Actualizado (S-F):** también el **DELETE de categoría** queda abierto a
+> cualquier autenticado (era solo-admin). Borrar una categoría deja a sus
+> productos **sin categoría** (`categoria_id` → NULL); no borra productos ni toca
+> el histórico (DOMAIN §3.2). Lo único reservado a admin es la gestión de usuarios.
 
 > **Autor de cada operación (S-B):** las RPC ya **no** reciben `p_usuario_id`. El
 > autor del movimiento es siempre `current_perfil_id()` (= `auth.uid()`), el
@@ -106,14 +110,14 @@ producto con los metadatos de alta.
 | p_unidades      | int    | sí     | > 0.                                             |
 | p_cliente_id    | uuid   | no     | Asignación del producto (solo en alta).          |
 | p_nombre        | text   | alta   | Requerido si se crea producto.                   |
-| p_categoria_id  | uuid   | no     | Solo alta.                                        |
+| p_categoria_id  | uuid   | no     | Solo alta. **(S-F)** Si es `null`, el producto se crea **sin categoría** (antes caía en 'Otros'). |
 | p_stock_minimo  | int    | no     | Solo alta. Default 5.                            |
 | p_ubicacion     | text   | no     | Solo alta / actualización explícita.             |
 | p_foto_path     | text   | no     | Ruta en Storage.                                 |
 | p_dimensiones   | jsonb  | no     | `{largo,ancho,alto,peso}`, solo alta.            |
 
 - **Efecto:** `disponible += p_unidades`. Movimiento `entrada`.
-- **Errores:** WMS002, WMS006 (si `p_producto_id` dado no existe).
+- **Errores:** WMS002, WMS006 (si `p_producto_id` o `p_categoria_id` dados no existen).
 
 ### 2.2 `crear_reserva`
 Bloquea unidades de `disponible` para un evento. No mueve buckets.

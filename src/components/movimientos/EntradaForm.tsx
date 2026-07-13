@@ -5,6 +5,7 @@ import { fotoUrl } from '../../lib/format'
 import { useToast } from '../toast/useToast'
 import { ProductThumb } from '../ProductThumb'
 import { CategoryChip } from '../CategoryChip'
+import { CategoriaForm } from '../categorias/CategoriaForm'
 import { ProductoPicker } from './ProductoPicker'
 
 interface EntradaFormProps {
@@ -13,6 +14,9 @@ interface EntradaFormProps {
   clientes: Cliente[]
   onHecho: () => void
 }
+
+/** Valor centinela del `<select>` de categoría: abre el alta en línea. */
+const NUEVA_CATEGORIA = '__nueva__'
 
 /**
  * Entrada de mercancía (SPEC §4 / CONTRACTS §2.1). Pantalla unificada: si el
@@ -43,6 +47,7 @@ export function EntradaForm({ productos, categorias, clientes, onHecho }: Entrad
   const [peso, setPeso] = useState('')
   const [foto, setFoto] = useState<File | null>(null)
   const [fotoPreview, setFotoPreview] = useState<string | null>(null)
+  const [creandoCategoria, setCreandoCategoria] = useState(false)
 
   const categoriasOrdenadas = useMemo(
     () => [...categorias.values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es')),
@@ -211,7 +216,13 @@ export function EntradaForm({ productos, categorias, clientes, onHecho }: Entrad
                 id="alta-categoria"
                 className="select"
                 value={categoriaId}
-                onChange={(e) => setCategoriaId(e.target.value)}
+                onChange={(e) => {
+                  if (e.target.value === NUEVA_CATEGORIA) {
+                    setCreandoCategoria(true)
+                    return
+                  }
+                  setCategoriaId(e.target.value)
+                }}
               >
                 <option value="">Sin categoría</option>
                 {categoriasOrdenadas.map((c) => (
@@ -219,6 +230,7 @@ export function EntradaForm({ productos, categorias, clientes, onHecho }: Entrad
                     {c.nombre}
                   </option>
                 ))}
+                <option value={NUEVA_CATEGORIA}>+ Crear categoría nueva…</option>
               </select>
             </div>
             <div className="campo">
@@ -338,6 +350,19 @@ export function EntradaForm({ productos, categorias, clientes, onHecho }: Entrad
             {enviando ? 'Registrando…' : alta ? 'Dar de alta y registrar' : 'Registrar entrada'}
           </button>
         </div>
+      )}
+
+      {/* Alta de categoría en línea: se crea y queda seleccionada sin salir del
+          formulario de entrada (deuda [S-D], resuelta en S-F). */}
+      {creandoCategoria && (
+        <CategoriaForm
+          onClose={() => setCreandoCategoria(false)}
+          onGuardado={(cat) => {
+            setCreandoCategoria(false)
+            setCategoriaId(cat.id)
+            onHecho() // recarga el catálogo: la categoría nueva entra en el selector
+          }}
+        />
       )}
     </form>
   )
