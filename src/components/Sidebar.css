@@ -40,6 +40,13 @@
   flex: 1;
 }
 
+/* Separa la navegación de administración del día a día. */
+.sidebar__separador {
+  height: 1px;
+  margin: var(--space-3) 12px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
 .navlink {
   display: flex;
   align-items: center;

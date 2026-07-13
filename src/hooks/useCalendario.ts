@@ -4,7 +4,7 @@ import type { ConflictoReserva, Evento } from '../lib/domain'
 import { useRealtime } from './useRealtime'
 
 export interface EventoCalendario extends Evento {
-  cliente: { id: string; nombre: string } | null
+  cliente: { id: string; nombre: string; color: string } | null
 }
 
 export interface CalendarioState {
@@ -37,7 +37,7 @@ export function useCalendario(): CalendarioState {
     const [evt, con] = await Promise.all([
       supabase
         .from('evento')
-        .select('*, cliente:cliente_id(id, nombre)')
+        .select('*, cliente:cliente_id(id, nombre, color)')
         .order('fecha_inicio', { ascending: true }),
       supabase.from('v_conflictos_reserva').select('*'),
     ])

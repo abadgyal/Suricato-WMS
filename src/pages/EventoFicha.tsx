@@ -12,6 +12,7 @@ import { ReservaForm } from '../components/eventos/ReservaForm'
 import { CheckinModal } from '../components/eventos/CheckinModal'
 import { ConflictoAviso } from '../components/eventos/ConflictoAviso'
 import { CategoryChip } from '../components/CategoryChip'
+import { ClienteChip } from '../components/ClienteChip'
 import { LocationChip } from '../components/LocationChip'
 import { ErrorState } from '../components/States'
 import { IconDescargar } from '../components/icons'
@@ -184,10 +185,17 @@ export function EventoFicha() {
           <div className="ficha__titulo-linea">
             <h1>{evento.nombre}</h1>
             <EstadoEventoChip estado={evento.estado} />
+            {evento.cliente && (
+              <ClienteChip
+                id={evento.cliente.id}
+                nombre={evento.cliente.nombre}
+                color={evento.cliente.color}
+              />
+            )}
           </div>
           <p className="ficha__meta">
-            {evento.cliente?.nombre ?? 'Sin cliente'} · {formatFecha(evento.fecha_inicio)} —{' '}
-            {formatFecha(evento.fecha_fin)}
+            {evento.cliente ? '' : 'Sin cliente · '}
+            {formatFecha(evento.fecha_inicio)} — {formatFecha(evento.fecha_fin)}
           </p>
           {evento.notas && <p className="ficha__notas">{evento.notas}</p>}
         </div>

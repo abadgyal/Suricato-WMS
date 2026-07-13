@@ -308,6 +308,12 @@ por RLS:
 | `v_stock_por_categoria`  | Suma de `total` por categoría (para el dashboard)          |
 | `v_unidades_fuera_evento`| `unidades_fuera(producto, evento)` (ver §1.4)              |
 | `v_conflictos_reserva`   | Eventos con rangos solapados que sobre-reservan un producto |
+| `v_movimiento_cliente`   | **(S-F)** Movimientos asociados a un cliente, con nombres resueltos |
+
+> **`v_movimiento_cliente` (S-F).** Alimenta el historial de la ficha de cliente.
+> Un movimiento se asocia a un cliente por esta precedencia: `movimiento.cliente_id`
+> → cliente de su `evento` → cliente del `producto` asignado (DOMAIN §6). Solo
+> devuelve las filas con algún cliente resuelto.
 
 ---
 

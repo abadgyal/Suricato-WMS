@@ -3,16 +3,35 @@ import { supabase } from '../lib/supabase'
 import type { Movimiento } from '../lib/domain'
 import { useRealtime } from './useRealtime'
 
-/** Fila de movimiento con los nombres ya resueltos por join (para el historial). */
-export interface MovimientoConJoins extends Movimiento {
-  producto: { nombre: string | null; foto_path: string | null } | null
-  usuario: { nombre: string | null } | null
-  cliente: { nombre: string | null } | null
-  evento: { nombre: string | null } | null
+/** Cliente resuelto por join, con lo justo para pintar su chip de color. */
+export interface ClienteRef {
+  id: string
+  nombre: string
+  color: string
 }
 
+/** Fila de movimiento con los nombres ya resueltos por join (para el historial). */
+export interface MovimientoConJoins extends Movimiento {
+  producto: { nombre: string | null; foto_path: string | null; cliente: ClienteRef | null } | null
+  usuario: { nombre: string | null } | null
+  cliente: ClienteRef | null
+  evento: { nombre: string | null; cliente: ClienteRef | null } | null
+}
+
+const CLIENTE = 'cliente:cliente_id(id, nombre, color)'
+
 const SELECT =
-  '*, producto:producto_id(nombre, foto_path), usuario:usuario_id(nombre), cliente:cliente_id(nombre), evento:evento_id(nombre)'
+  `*, producto:producto_id(nombre, foto_path, ${CLIENTE}), usuario:usuario_id(nombre), ` +
+  `${CLIENTE}, evento:evento_id(nombre, ${CLIENTE})`
+
+/**
+ * Cliente al que se asocia un movimiento. Misma precedencia que la vista
+ * `v_movimiento_cliente` (S-F): lo que diga el propio movimiento, si no el
+ * cliente de su evento, y si no el del producto asignado.
+ */
+export function clienteDeMovimiento(m: MovimientoConJoins): ClienteRef | null {
+  return m.cliente ?? m.evento?.cliente ?? m.producto?.cliente ?? null
+}
 
 export interface HistorialState {
   movimientos: MovimientoConJoins[]

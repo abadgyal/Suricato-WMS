@@ -59,6 +59,7 @@ export type Database = {
       }
       cliente: {
         Row: {
+          color: string
           contacto: string | null
           creado_en: string
           email: string | null
@@ -68,6 +69,7 @@ export type Database = {
           telefono: string | null
         }
         Insert: {
+          color?: string
           contacto?: string | null
           creado_en?: string
           email?: string | null
@@ -77,6 +79,7 @@ export type Database = {
           telefono?: string | null
         }
         Update: {
+          color?: string
           contacto?: string | null
           creado_en?: string
           email?: string | null
@@ -496,6 +499,36 @@ export type Database = {
             columns: ["producto_id"]
             isOneToOne: false
             referencedRelation: "v_producto_disponible"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_movimiento_cliente: {
+        Row: {
+          bucket_destino: string | null
+          bucket_origen: Database["public"]["Enums"]["bucket"] | null
+          cliente_id: string | null
+          creado_en: string | null
+          evento: string | null
+          evento_id: string | null
+          id: string | null
+          motivo: string | null
+          producto: string | null
+          producto_foto: string | null
+          producto_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimiento"] | null
+          unidades: number | null
+          usuario: string | null
+          usuario_id: string | null
+          valor_anterior: number | null
+          valor_nuevo: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimiento_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "cliente"
             referencedColumns: ["id"]
           },
         ]

@@ -114,7 +114,20 @@ Predefinidas: Audio, Vídeo, Iluminación, Estructuras, Consumibles, Otros.
 | `contacto`  | text NULL    | Persona de contacto.                      |
 | `email`     | text NULL    |                                           |
 | `telefono`  | text NULL    |                                           |
-| `parent_id` | uuid FK NULL | Jerarquía en árbol (→ cliente).           |
+| `color`     | text         | **(S-F)** Color del cliente. NOT NULL.    |
+| `parent_id` | uuid FK NULL | Jerarquía en árbol (→ cliente). **Sin uso** (S-F). |
+
+> **Color (S-F).** Se asigna solo al crear el cliente (trigger `trg_cliente_color`,
+> determinista por `id`): ningún cliente queda sin color. Se puede cambiar desde su
+> ficha, siempre dentro de una **paleta deliberada** de tonos apagados/desaturados
+> (`wms_paleta_cliente()`): no compite con los colores de bucket (verde/azul/ámbar/
+> rojo = estado de stock) ni con los chips de categoría. Se usa en las barras del
+> calendario y en los chips de cliente; **no** en la tabla de inventario, donde
+> mandan buckets y categorías.
+
+> **Sin árbol de clientes (S-F).** La cartera es una **lista plana**: los "hijos" de
+> un cliente son sus eventos, no otros clientes. `parent_id` se conserva en la BD
+> (dato del seed) pero la UI lo ignora. Un evento puede no tener cliente.
 
 ### 3.5 evento  *(entidad de primera clase — decisión A)*
 | Campo          | Tipo         | Notas                                      |

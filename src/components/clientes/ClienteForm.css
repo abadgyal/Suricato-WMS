@@ -1,0 +1,24 @@
+/* Paleta de color (clientes y categorías): muestras cuadradas seleccionables. */
+.paleta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.paleta__color {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 2px solid transparent;
+  box-shadow: inset 0 0 0 1px rgba(23, 22, 31, 0.08);
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.paleta__color:hover {
+  transform: translateY(-1px);
+}
+
+.paleta__color--elegido {
+  border-color: var(--color-text);
+  transform: translateY(-1px);
+}

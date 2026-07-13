@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { useMovimientos } from '../hooks/useMovimientos'
+import { clienteDeMovimiento, useMovimientos } from '../hooks/useMovimientos'
 import type { TipoMovimiento } from '../lib/domain'
 import { MovimientoBadge } from '../components/MovimientoBadge'
+import { ClienteChip } from '../components/ClienteChip'
 import { TableSkeleton, EmptyState, ErrorState } from '../components/States'
 import { formatFechaHora } from '../lib/format'
 import { IconBuscar, IconMovimientos } from '../components/icons'
@@ -33,7 +34,7 @@ export function Historial() {
       const campos = [
         m.producto?.nombre,
         m.usuario?.nombre,
-        m.cliente?.nombre,
+        clienteDeMovimiento(m)?.nombre,
         m.evento?.nombre,
         m.motivo,
       ]
@@ -120,13 +121,21 @@ export function Historial() {
                 </tr>
               </thead>
               <tbody>
-                {visibles.map((m) => (
+                {visibles.map((m) => {
+                  const cli = clienteDeMovimiento(m)
+                  return (
                   <tr key={m.id}>
                     <td>
                       <MovimientoBadge tipo={m.tipo} />
                     </td>
                     <td className="historial__producto">{m.producto?.nombre ?? '—'}</td>
-                    <td>{m.cliente?.nombre ?? m.evento?.nombre ?? '—'}</td>
+                    <td>
+                      {cli ? (
+                        <ClienteChip id={cli.id} nombre={cli.nombre} color={cli.color} />
+                      ) : (
+                        <span className="historial__sin-cliente">{m.evento?.nombre ?? '—'}</span>
+                      )}
+                    </td>
                     <td>{m.usuario?.nombre ?? '—'}</td>
                     <td className="historial__col-num tnum">
                       {m.tipo === 'ajuste' ? (
@@ -140,7 +149,8 @@ export function Historial() {
                     <td className="historial__motivo">{m.motivo ?? '—'}</td>
                     <td className="historial__fecha">{formatFechaHora(m.creado_en)}</td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           </div>

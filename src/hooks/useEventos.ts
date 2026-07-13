@@ -5,7 +5,7 @@ import { useRealtime } from './useRealtime'
 
 /** Evento del listado, con su cliente y el resumen de material comprometido. */
 export interface EventoResumen extends Evento {
-  cliente: { id: string; nombre: string } | null
+  cliente: { id: string; nombre: string; color: string } | null
   /** Líneas de reserva todavía activas. */
   lineasActivas: number
   /** Unidades bloqueadas por esas reservas (aún en el almacén). */
@@ -43,7 +43,7 @@ export function useEventos(): EventosState {
     const [evt, cli, res, fuera] = await Promise.all([
       supabase
         .from('evento')
-        .select('*, cliente:cliente_id(id, nombre)')
+        .select('*, cliente:cliente_id(id, nombre, color)')
         .order('fecha_inicio', { ascending: false }),
       supabase.from('cliente').select('*').order('nombre', { ascending: true }),
       supabase.from('reserva').select('evento_id, unidades, estado').eq('estado', 'activa'),
@@ -75,7 +75,7 @@ export function useEventos(): EventosState {
 
     setError(null)
     setEventos(
-      ((evt.data ?? []) as unknown as (Evento & { cliente: { id: string; nombre: string } | null })[]).map(
+      ((evt.data ?? []) as unknown as (Evento & { cliente: { id: string; nombre: string; color: string } | null })[]).map(
         (e) => ({
           ...e,
           lineasActivas: reservasPorEvento.get(e.id)?.lineas ?? 0,

@@ -146,3 +146,9 @@
   color: var(--color-text-secondary);
   font-size: 13px;
 }
+
+/* Sin cliente asociado: se muestra el evento (si lo hay) en tinta secundaria. */
+.historial__sin-cliente {
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}

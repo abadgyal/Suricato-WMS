@@ -1,0 +1,163 @@
+.clientes {
+  padding: var(--space-6) var(--space-5);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.clientes__cab {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+}
+
+.clientes__cab h1 {
+  font-size: 26px;
+}
+
+.clientes__sub {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+}
+
+.clientes__cab-acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.clientes__buscador {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 12px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+}
+
+.clientes__buscador:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+.clientes__buscador-input {
+  width: 260px;
+  max-width: 100%;
+  padding: 9px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--color-text);
+}
+
+.clientes__panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.clientes__lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.clientes__lista li + li {
+  border-top: 1px solid var(--color-border);
+}
+
+/* --- Fila de cliente --- */
+.cliente-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  border: none;
+  background: transparent;
+  text-align: left;
+  transition: background-color 0.12s ease;
+}
+
+.cliente-fila:hover {
+  background-color: var(--color-canvas);
+}
+
+.cliente-fila__color {
+  width: 10px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background-color: var(--cliente-color);
+}
+
+.cliente-fila__datos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.cliente-fila__nombre {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--color-text);
+}
+
+.cliente-fila__contacto {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cliente-fila__senales {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+/* Material fuera AHORA: es el dato operativo, se marca con el color de bucket. */
+.cliente-fila__fuera {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--bucket-en-evento);
+  background-color: var(--bucket-en-evento-tint);
+}
+
+.cliente-fila__proximos {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background-color: var(--color-canvas);
+  border: 1px solid var(--color-border);
+}
+
+.cliente-fila__nada {
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .clientes__cab-acciones {
+    width: 100%;
+  }
+
+  .clientes__buscador-input {
+    width: 100%;
+  }
+}

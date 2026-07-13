@@ -9,6 +9,8 @@ import { Panel } from './pages/Panel'
 import { Eventos } from './pages/Eventos'
 import { EventoFicha } from './pages/EventoFicha'
 import { Calendario } from './pages/Calendario'
+import { Clientes } from './pages/Clientes'
+import { ClienteFicha } from './pages/ClienteFicha'
 import './App.css'
 
 /** Splash a pantalla completa mientras se resuelve la sesión persistida. */
@@ -50,6 +52,8 @@ export default function App() {
         <Route path="/eventos" element={<Eventos />} />
         <Route path="/eventos/:id" element={<EventoFicha />} />
         <Route path="/calendario" element={<Calendario />} />
+        <Route path="/clientes" element={<Clientes />} />
+        <Route path="/clientes/:id" element={<ClienteFicha />} />
         {/* Las reservas viven dentro de su evento: no tienen pantalla propia. */}
         <Route path="/reservas" element={<Navigate to="/eventos" replace />} />
       </Route>

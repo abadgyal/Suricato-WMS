@@ -151,3 +151,44 @@ export function IconFotoVacia(p: IconProps) {
     </svg>
   )
 }
+
+/** Clientes — cartera de personas/organizaciones. */
+export function IconClientes(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 20a6 6 0 0 1 12 0" />
+      <path d="M16.5 5.5a3 3 0 0 1 0 5.6M18 20a6 6 0 0 0-2.4-4.8" />
+    </svg>
+  )
+}
+
+/** Categorías — etiqueta. */
+export function IconCategorias(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9-9-9Z" />
+      <circle cx="7.5" cy="7.5" r="1.4" />
+    </svg>
+  )
+}
+
+/** Administración — llave / ajustes de sistema. */
+export function IconAdmin(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M12 3 4 6v5c0 4.4 3.2 8.4 8 10 4.8-1.6 8-5.6 8-10V6l-8-3Z" />
+      <path d="M12 10.5v3M12 8.2v.1" />
+    </svg>
+  )
+}
+
+/** Eliminar — papelera. */
+export function IconPapelera(p: IconProps) {
+  return (
+    <svg {...base(p)}>
+      <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+      <path d="M6 7v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7M10 11v6M14 11v6" />
+    </svg>
+  )
+}

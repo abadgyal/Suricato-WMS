@@ -16,6 +16,8 @@ import {
 } from '../lib/fechas'
 import { ESTADO_EVENTO_COLOR_VAR } from '../lib/domain'
 import { EstadoEventoChip } from '../components/eventos/EstadoChip'
+import { ClienteChip } from '../components/ClienteChip'
+import type { EventoCalendario as EventoCal } from '../hooks/useCalendario'
 import { ConflictoAviso } from '../components/eventos/ConflictoAviso'
 import { Modal } from '../components/Modal'
 import { ErrorState } from '../components/States'
@@ -28,6 +30,16 @@ type Vista = 'linea' | 'mes'
 /** Semanas visibles de una vez en la línea de tiempo. */
 const SEMANAS = 8
 const DIAS = SEMANAS * 7
+
+/**
+ * Color de la barra de un evento: el de su **cliente** (paleta apagada de S-F),
+ * que es lo que se quiere reconocer de un vistazo en el calendario. Los eventos
+ * sin cliente caen al color de su estado. El estado sigue leyéndose en el chip
+ * del detalle y en el listado de eventos.
+ */
+function colorBarra(e: EventoCal): string {
+  return e.cliente?.color ?? ESTADO_EVENTO_COLOR_VAR[e.estado]
+}
 
 export function Calendario() {
   const { eventos, conflictosPorEvento, cargando, error, recargar } = useCalendario()
@@ -203,7 +215,7 @@ export function Calendario() {
                       style={{
                         gridColumn: `${b.columna} / span ${b.span}`,
                         gridRow: fila + 1,
-                        ['--evento-color' as string]: ESTADO_EVENTO_COLOR_VAR[b.evento.estado],
+                        ['--evento-color' as string]: colorBarra(b.evento),
                       }}
                       onClick={() => setElegido(b.evento)}
                       title={`${b.evento.nombre} · ${formatFecha(b.evento.fecha_inicio)}—${formatFecha(b.evento.fecha_fin)}`}
@@ -243,7 +255,7 @@ export function Calendario() {
                         <button
                           key={e.id}
                           className={`mes__evento ${conf.length ? 'mes__evento--conflicto' : ''}`}
-                          style={{ ['--evento-color' as string]: ESTADO_EVENTO_COLOR_VAR[e.estado] }}
+                          style={{ ['--evento-color' as string]: colorBarra(e) }}
                           onClick={() => setElegido(e)}
                           title={e.nombre}
                         >
@@ -280,7 +292,15 @@ export function Calendario() {
           <div className="cal__detalle">
             <div className="cal__detalle-meta">
               <EstadoEventoChip estado={elegido.estado} />
-              <span>{elegido.cliente?.nombre ?? 'Sin cliente'}</span>
+              {elegido.cliente ? (
+                <ClienteChip
+                  id={elegido.cliente.id}
+                  nombre={elegido.cliente.nombre}
+                  color={elegido.cliente.color}
+                />
+              ) : (
+                <span>Sin cliente</span>
+              )}
             </div>
 
             {conflictosElegido.length === 0 ? (

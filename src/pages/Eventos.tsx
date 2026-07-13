@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useEventos } from '../hooks/useEventos'
 import { ESTADO_EVENTO_LABEL, type EstadoEvento } from '../lib/domain'
 import { EstadoEventoChip } from '../components/eventos/EstadoChip'
+import { ClienteChip } from '../components/ClienteChip'
 import { EventoForm } from '../components/eventos/EventoForm'
 import { TableSkeleton, EmptyState, ErrorState } from '../components/States'
 import { formatFecha } from '../lib/format'
@@ -193,7 +194,17 @@ export function Eventos() {
                         {e.nombre}
                       </Link>
                     </td>
-                    <td>{e.cliente?.nombre ?? '—'}</td>
+                    <td onClick={(ev) => ev.stopPropagation()}>
+                      {e.cliente ? (
+                        <ClienteChip
+                          id={e.cliente.id}
+                          nombre={e.cliente.nombre}
+                          color={e.cliente.color}
+                        />
+                      ) : (
+                        '—'
+                      )}
+                    </td>
                     <td className="eventos__fechas">
                       {formatFecha(e.fecha_inicio)} — {formatFecha(e.fecha_fin)}
                     </td>

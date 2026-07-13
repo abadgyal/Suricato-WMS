@@ -17,6 +17,17 @@
   border: 1px solid color-mix(in srgb, var(--chip-color) 26%, transparent);
 }
 
+/* --- Cliente: mismo patrón que categoría, con su color apagado --- */
+.chip--cliente {
+  background-color: color-mix(in srgb, var(--chip-color) 14%, var(--color-surface));
+  color: var(--color-text);
+  border: 1px solid color-mix(in srgb, var(--chip-color) 30%, transparent);
+}
+
+.chip--enlace:hover {
+  border-color: var(--chip-color);
+}
+
 .chip__dot {
   width: 8px;
   height: 8px;
