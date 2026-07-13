@@ -2,7 +2,7 @@
 
 **Proyecto:** WMS · Suricato Producciones
 **Versión:** 0.1 (Fase 1)
-**Última actualización:** 2026-07-08
+**Última actualización:** 2026-07-13 (S-E: `cancelar_reserva`, `cumplir_evento`)
 
 Define la frontera exacta entre el frontend (React + Vite) y la base de datos
 (Supabase/Postgres). Toda mutación de stock pasa por una **función RPC** que
@@ -47,9 +47,9 @@ entrega al cliente. Formato: `WMSNNN: mensaje`.
 | WMS001  | Stock insuficiente (`disponible_real < unidades`)                 |
 | WMS002  | Cantidad inválida (`unidades <= 0`)                               |
 | WMS003  | Motivo obligatorio y vacío                                        |
-| WMS004  | Reserva no está `activa`                                          |
+| WMS004  | Reserva o evento no está en un estado válido para la operación     |
 | WMS005  | Devolución excede las unidades fuera de ese producto en el evento |
-| WMS006  | Producto inexistente                                              |
+| WMS006  | Producto o evento inexistente                                      |
 | WMS007  | Bucket de origen sin unidades suficientes                         |
 | WMS008  | Rango de fechas inválido (`fecha_fin < fecha_inicio`)             |
 | WMS009  | Permiso denegado para la operación (rol insuficiente)            |
@@ -140,7 +140,8 @@ Materializa una reserva: mueve el stock y la cierra.
 
 - **Validación:** reserva en estado `activa`; `disponible_real ≥ unidades`.
 - **Efecto:** `disponible → en_evento` por las unidades de la reserva; reserva pasa a
-  `cumplida`; genera movimiento `salida_evento` ligado al evento.
+  `cumplida`; genera movimiento `salida_evento` ligado al evento. **(S-E)** además,
+  si el evento estaba `planificado`, pasa a `en_curso`: hay material fuera.
 - **Errores:** WMS004, WMS001.
 
 ### 2.4 `salida_evento`
@@ -221,6 +222,51 @@ Fija el valor de un bucket para cuadrar con el recuento físico.
 - **Rol:** cualquier autenticado (S-D; antes solo admin). Ver §1.3.
 - **Errores:** WMS002 (`p_valor_nuevo < 0`), WMS003, WMS009 (solo si no hay sesión).
 
+### 2.9 `cancelar_reserva`  *(S-E)*
+Libera una reserva activa. **No mueve stock.**
+
+| Parámetro    | Tipo | Oblig. | Notas |
+|--------------|------|--------|-------|
+| p_reserva_id | uuid | sí     |       |
+
+- **Validación:** la reserva existe y está `activa`.
+- **Efecto:** la reserva pasa a `cancelada`; `disponible_real` recupera esas
+  unidades. **No** genera movimiento: una reserva es una capa lógica sobre
+  `disponible` (DOMAIN §1), y cancelarla no es un hecho físico.
+- **Retorno:** la fila `reserva` actualizada (igual que `crear_reserva`).
+- **Errores:** WMS004 (no existe o no está activa), WMS009.
+
+### 2.10 `cumplir_evento`  *(S-E)*
+Materializa **todas** las reservas activas de un evento de una vez, reutilizando
+la lógica de `cumplir_reserva` línea a línea.
+
+| Parámetro   | Tipo | Oblig. | Notas |
+|-------------|------|--------|-------|
+| p_evento_id | uuid | sí     |       |
+
+- **Validación:** el evento existe y está `planificado` o `en_curso`; tiene al
+  menos una reserva activa; cada línea cumple `disponible_real ≥ unidades`.
+- **Atomicidad:** o salen todas las líneas o no sale ninguna. Si una falla, la
+  excepción se propaga y la transacción revierte las ya materializadas; el
+  mensaje dice **qué producto** falló.
+- **Efecto:** por cada reserva activa, `disponible → en_evento` + movimiento
+  `salida_evento` + reserva a `cumplida`; el evento pasa a `en_curso`.
+- **Retorno:** no es el estándar de §1.1 (toca varios productos):
+
+```json
+{
+  "evento_id": "uuid",
+  "estado": "en_curso",
+  "reservas_cumplidas": 3,
+  "unidades": 12,
+  "lineas": [{ "reserva_id": "uuid", "producto_id": "uuid", "producto": "Foco LED", "unidades": 4 }],
+  "movimiento_ids": ["uuid"]
+}
+```
+
+- **Errores:** WMS006 (evento inexistente), WMS004 (evento cerrado/cancelado, o
+  sin reservas activas), WMS001 (alguna línea sin stock), WMS009.
+
 ---
 
 ## 3. Lecturas y CRUD por REST + RLS (sin RPC)
@@ -234,6 +280,11 @@ por RLS:
 - **CRUD simple:** crear/editar categoría (admin), crear/editar cliente, crear/editar
   evento, editar metadatos de producto (nombre, foto, ubicación, dimensiones — **no**
   buckets).
+- **Estado del evento:** `planificado → en_curso` lo hacen las RPC al sacar material
+  (§2.3/§2.10). **Cerrar** (`en_curso → cerrado`) y **cancelar** un evento son un
+  `UPDATE` directo sobre `evento.estado`: no mueven stock, así que no necesitan RPC.
+  La UI solo ofrece cerrar cuando `v_unidades_fuera_evento` no devuelve nada para ese
+  evento (SPEC §6).
 - **Gestión de usuarios:** alta con rol vía Edge Function con service role (no desde
   el cliente); baja lógica (`activo = false`); el admin principal no se elimina.
 
@@ -254,3 +305,4 @@ por RLS:
 
 - ~~Rol para `dar_de_baja` standalone~~ → **resuelto (S-D):** cualquier autenticado.
 - ~~Edición de metadatos de producto~~ → trabajador puede (confirmado).
+- ~~Falta una RPC `cancelar_reserva`~~ → **resuelto (S-E):** §2.9.

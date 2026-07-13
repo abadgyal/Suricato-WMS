@@ -647,6 +647,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cancelar_reserva: { Args: { p_reserva_id: string }; Returns: Json }
       col_is_null:
         | {
             Args: {
@@ -692,6 +693,7 @@ export type Database = {
         }
         Returns: Json
       }
+      cumplir_evento: { Args: { p_evento_id: string }; Returns: Json }
       cumplir_reserva: { Args: { p_reserva_id: string }; Returns: Json }
       current_perfil_id: { Args: never; Returns: string }
       current_rol: { Args: never; Returns: Database["public"]["Enums"]["rol"] }
