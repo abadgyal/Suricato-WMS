@@ -153,3 +153,34 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** hecho en S-D. Migración `20260709120300_permisos_s_d.sql`;
   tests de `db-test.mjs` actualizados (trabajador SÍ ajusta/da de baja/crea categoría).
 - **Fecha:** 2026-07-09.
+
+### [S-D] Alta de categoría en línea desde el formulario de Entrada
+- **Qué:** el formulario de Entrada selecciona una categoría existente pero **no**
+  permite crear una nueva en línea (SPEC §4 lo menciona: "se puede crear nueva").
+  La escritura de categorías ya está abierta a cualquier autenticado (S-D), así que
+  falta solo la UI.
+- **Por qué:** `categoria.color` debe ser determinista y estable (DOMAIN §3.2) y la
+  paleta actual es la del seed (Audio, Vídeo…); crear categorías con color arbitrario
+  desde la entrada se salía del foco del bloque de formularios.
+- **Cuándo se resuelve:** S-F (gestión de categorías del admin) o antes si se define
+  un generador de color determinista por nombre. La gestión de categorías es de S-F.
+- **Fecha:** 2026-07-13.
+
+### [S-D] Historial limitado a los últimos 500 movimientos (sin paginación)
+- **Qué:** `useMovimientos` lee `.limit(500)` ordenado por fecha desc. Con más de 500
+  movimientos, los más antiguos no aparecen en el historial (el dashboard usa un
+  `count` real aparte, así que "movimientos hoy" no se ve afectado).
+- **Por qué:** simple y suficiente para el volumen actual; la paginación/scroll
+  infinito es trabajo transversal.
+- **Cuándo se resuelve:** S-G (transversales) o cuando el log supere ~500 filas.
+- **Fecha:** 2026-07-13.
+
+### [S-D] Dos implementaciones de Realtime conviviendo
+- **Qué:** `useInventario` (S-C) trae su propia suscripción Realtime inline, mientras
+  que las pantallas nuevas (movimientos, historial, panel) usan el hook genérico
+  `useRealtime`. Hacen lo mismo (canal autenticado + re-suscripción por sesión).
+- **Por qué:** no se refactorizó `useInventario` para no tocar código de S-C que ya
+  funciona y está probado a mano.
+- **Cuándo se resuelve:** migrar `useInventario` a `useRealtime` en un pase de limpieza
+  (S-G), unificando una sola implementación.
+- **Fecha:** 2026-07-13.

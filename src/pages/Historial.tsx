@@ -41,8 +41,6 @@ export function Historial() {
     })
   }, [movimientos, tipoFiltro, busqueda])
 
-  const hayFiltros = filtro !== 'todos' || busqueda !== ''
-
   return (
     <div className="historial">
       <header className="historial__cab">
