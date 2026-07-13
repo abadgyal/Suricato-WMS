@@ -63,6 +63,13 @@ export const ESTADO_RESERVA_COLOR_VAR: Record<EstadoReserva, string> = {
 export const BUCKETS = ['disponible', 'en_evento', 'en_reparacion'] as const
 export type Bucket = (typeof BUCKETS)[number]
 
+/**
+ * Buckets de los que se puede dar de baja (CONTRACTS §2.7). `en_evento` queda
+ * fuera: el material perdido en un evento se registra en el check-in de
+ * devolución como «perdido», que liga la baja a su evento.
+ */
+export const BUCKETS_BAJA = ['disponible', 'en_reparacion'] as const satisfies readonly Bucket[]
+
 /** Etiqueta legible de cada bucket para la UI. */
 export const BUCKET_LABEL: Record<Bucket, string> = {
   disponible: 'Disponible',

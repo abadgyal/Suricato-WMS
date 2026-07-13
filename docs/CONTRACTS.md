@@ -50,7 +50,7 @@ entrega al cliente. Formato: `WMSNNN: mensaje`.
 | WMS004  | Reserva o evento no está en un estado válido para la operación     |
 | WMS005  | Devolución excede las unidades fuera de ese producto en el evento |
 | WMS006  | Producto o evento inexistente                                      |
-| WMS007  | Bucket de origen sin unidades suficientes                         |
+| WMS007  | Bucket de origen inválido o sin unidades suficientes              |
 | WMS008  | Rango de fechas inválido (`fecha_fin < fecha_inicio`)             |
 | WMS009  | Permiso denegado para la operación (rol insuficiente)            |
 
@@ -198,14 +198,24 @@ Retira unidades del total operativo de forma permanente.
 |-----------------|------|--------|------------------------------------------|
 | p_producto_id   | uuid | sí     |                                          |
 | p_unidades      | int  | sí     | > 0.                                     |
-| p_bucket_origen | text | sí     | `disponible` \| `en_evento` \| `en_reparacion` |
+| p_bucket_origen | text | sí     | `disponible` \| `en_reparacion`. **`en_evento` NO se admite** (S-F). |
 | p_motivo        | text | sí     | Obligatorio.                             |
 
-- **Validación:** el bucket de origen tiene `≥ p_unidades`.
+- **Validación:** el bucket de origen es `disponible` o `en_reparacion` y tiene
+  `≥ p_unidades`.
 - **Efecto:** `<bucket_origen> -= p_unidades`; `total` decrece; `baja_acumulada +=
   p_unidades`. Movimiento `baja`.
 - **Rol:** cualquier autenticado (S-D; antes solo admin). Ver §1.3.
 - **Errores:** WMS007, WMS002, WMS003, WMS009 (solo si no hay sesión).
+
+> **Material en un evento (S-F).** `en_evento` **no** es un origen válido de baja
+> y la RPC lanza WMS007 remitiendo al camino correcto. Motivo: una baja no lleva
+> `evento_id`, así que bajar desde `en_evento` dejaba las unidades contadas como
+> fuera en `v_unidades_fuera_evento` (§1.4) — material fantasma: el evento no
+> podía cerrarse y una devolución posterior podía chocar con el CHECK de no
+> negativos. El material que se pierde en un evento se registra en el **check-in
+> de devolución** con `p_perdido` (§2.5), que sí liga la baja a su evento. La UI
+> de la ficha de producto solo ofrece `disponible` y `en_reparacion`.
 
 ### 2.8 `ajustar`
 Fija el valor de un bucket para cuadrar con el recuento físico.

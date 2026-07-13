@@ -204,6 +204,12 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
   `devolver`. Decisión de producto: hablarlo antes de tocarlo. **No es teórico:** la
   ficha de producto (S-D) permite hoy dar de baja desde `en_evento`.
 - **Fecha:** 2026-07-13.
+- **Estado:** ✅ RESUELTA en S-F (2026-07-13) — **Opción A** (prohibir el bucket).
+  `dar_de_baja` solo admite `disponible` y `en_reparacion`; con `en_evento` lanza
+  WMS007 remitiendo al check-in de devolución con unidades «perdidas» (migración
+  `20260713120200_rpc_dar_de_baja_s_f.sql`, CONTRACTS §2.7). La ficha de producto
+  ya no ofrece ese origen y avisa del camino correcto. Test de regresión:
+  `supabase/tests/04_dar_de_baja_en_evento.sql`.
 
 ### [S-E] El check-in no es atómico entre productos
 - **Qué:** el check-in llama a `devolver` una vez por producto con unidades. Cada
@@ -226,6 +232,10 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** junto con la deuda de `dar_de_baja`, y entonces sí un trigger
   (o una RPC `cerrar_evento`) que impida cerrar con material fuera.
 - **Fecha:** 2026-07-13.
+- **Nota (S-F, 2026-07-13):** el bloqueante desaparece — con `dar_de_baja` ya no se
+  puede crear material fantasma, así que un evento con "material fuera" siempre
+  tiene un camino de vuelta (check-in). Queda pendiente el trigger/RPC de guardia:
+  se retoma en S-G. La deuda **sigue abierta**.
 
 ### [S-E] Cancelar un evento no tiene flujo
 - **Qué:** el enum `estado_evento` incluye `cancelado` (DOMAIN §3.5) pero la UI no lo

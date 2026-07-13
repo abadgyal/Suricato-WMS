@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { BUCKET_LABEL, type Bucket } from '../lib/domain'
+import { BUCKET_LABEL, BUCKETS_BAJA, type Bucket } from '../lib/domain'
 import { llamarRpc, type EstadoStock } from '../lib/rpc'
 import { useToast } from './toast/useToast'
 import './AccionesEstado.css'
@@ -32,7 +32,7 @@ export function AccionesEstado({
   const [repUnidades, setRepUnidades] = useState('')
   const [repEnviando, setRepEnviando] = useState(false)
 
-  const [bajaBucket, setBajaBucket] = useState<Bucket>('disponible')
+  const [bajaBucket, setBajaBucket] = useState<Bucket>(BUCKETS_BAJA[0])
   const [bajaUnidades, setBajaUnidades] = useState('')
   const [bajaMotivo, setBajaMotivo] = useState('')
   const [bajaEnviando, setBajaEnviando] = useState(false)
@@ -42,10 +42,10 @@ export function AccionesEstado({
     [disponible, en_evento, en_reparacion],
   )
 
-  // Buckets con al menos una unidad: los únicos de los que se puede dar de baja.
-  const bucketsConStock = (Object.keys(stockPorBucket) as Bucket[]).filter(
-    (b) => stockPorBucket[b] > 0,
-  )
+  // Solo `disponible` y `en_reparacion` con unidades: `en_evento` no es un origen
+  // válido de baja (CONTRACTS §2.7). El material perdido en un evento se registra
+  // en el check-in de devolución como «perdido», que liga la baja a su evento.
+  const bucketsConStock = BUCKETS_BAJA.filter((b) => stockPorBucket[b] > 0)
 
   // Si el bucket elegido se queda a 0 (p. ej. tras una baja), salta a otro con stock.
   const bucketBaja = stockPorBucket[bajaBucket] > 0 ? bajaBucket : bucketsConStock[0] ?? bajaBucket
@@ -136,10 +136,20 @@ export function AccionesEstado({
       <form className="acciones__bloque" onSubmit={darDeBaja}>
         <div className="acciones__cab">
           <span className="acciones__nombre acciones__nombre--baja">Dar de baja</span>
-          <span className="acciones__ayuda">Saca unidades del total de forma permanente. Requiere motivo.</span>
+          <span className="acciones__ayuda">
+            Saca unidades del total de forma permanente. Requiere motivo. Solo desde almacén
+            (disponible o en reparación).
+          </span>
         </div>
+        {en_evento > 0 && (
+          <p className="acciones__vacio">
+            Hay {en_evento} unidad(es) en un evento. El material que no vuelve se da de baja en
+            el check-in de devolución del evento, marcándolo como «perdido»: así la baja queda
+            ligada a su evento.
+          </p>
+        )}
         {bucketsConStock.length === 0 ? (
-          <p className="acciones__vacio">No hay unidades operativas que dar de baja.</p>
+          <p className="acciones__vacio">No hay unidades en almacén que dar de baja.</p>
         ) : (
           <>
             <div className="acciones__fila">
