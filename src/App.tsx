@@ -3,6 +3,7 @@ import { useAuth } from './auth/useAuth'
 import { Layout } from './components/Layout'
 import { Login } from './pages/Login'
 import { Inventario } from './pages/Inventario'
+import { Movimientos } from './pages/Movimientos'
 import { Placeholder } from './pages/Placeholder'
 import './App.css'
 
@@ -48,15 +49,7 @@ export default function App() {
             />
           }
         />
-        <Route
-          path="/movimientos"
-          element={
-            <Placeholder
-              titulo="Movimientos"
-              descripcion="Entradas, salidas a evento, devoluciones y ajustes, con su historial. Llega en el próximo módulo."
-            />
-          }
-        />
+        <Route path="/movimientos" element={<Movimientos />} />
         <Route
           path="/reservas"
           element={

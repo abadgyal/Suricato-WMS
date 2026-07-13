@@ -1,0 +1,287 @@
+.movimientos {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-5);
+}
+
+.movimientos__cab {
+  margin-bottom: var(--space-5);
+}
+
+.movimientos__cab h1 {
+  font-size: 26px;
+}
+
+.movimientos__sub {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+}
+
+/* --- Pestañas --- */
+.movimientos__tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.movimientos__tab {
+  flex: 1;
+  padding: 9px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.movimientos__tab:hover {
+  color: var(--color-text);
+}
+
+.movimientos__tab--activa {
+  background-color: var(--color-accent);
+  color: #fff;
+}
+
+/* --- Panel --- */
+.movimientos__panel {
+  margin-top: var(--space-4);
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.movimientos__desc {
+  margin: 0 0 var(--space-4);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.movimientos__cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  color: var(--color-text-secondary);
+}
+
+/* --- Formularios de movimiento --- */
+.mov-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mov-form__fila {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.mov-form__fila--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.mov-form__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.mov-form__alta-toggle {
+  align-self: flex-start;
+  margin-top: 4px;
+  border: none;
+  background: transparent;
+  color: var(--color-accent);
+  font-weight: 600;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.mov-form__alta-toggle:hover {
+  color: var(--color-accent-hover);
+  text-decoration: underline;
+}
+
+.mov-form__dims {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  margin: 0;
+}
+
+.mov-form__dims legend {
+  padding: 0 6px;
+}
+
+/* Notas y errores de campo. */
+.campo__nota {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.campo__error {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bucket-baja);
+}
+
+/* --- Previsualización del ajuste (anterior → nuevo) --- */
+.mov-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background-color: var(--color-canvas);
+  border-radius: var(--radius-md);
+}
+
+.mov-preview__caja {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 64px;
+}
+
+.mov-preview__label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.mov-preview__valor {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.mov-preview__valor--sube {
+  color: var(--bucket-disponible);
+}
+
+.mov-preview__valor--baja {
+  color: var(--bucket-baja);
+}
+
+.mov-preview__flecha {
+  font-size: 22px;
+  color: var(--color-text-secondary);
+}
+
+.mov-preview__delta {
+  margin-left: auto;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+}
+
+.mov-preview__delta--sube {
+  color: var(--bucket-disponible);
+  background-color: var(--bucket-disponible-tint);
+}
+
+.mov-preview__delta--baja {
+  color: var(--bucket-baja);
+  background-color: var(--bucket-baja-tint);
+}
+
+/* --- Dato destacado (disponible real en salida) --- */
+.mov-dato-destacado {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background-color: var(--bucket-en-evento-tint);
+  border-radius: var(--radius-md);
+}
+
+.mov-dato-destacado__label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.mov-dato-destacado__valor {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--bucket-en-evento);
+}
+
+.mov-dato-destacado__valor--baja {
+  color: var(--bucket-baja);
+}
+
+.mov-dato-destacado__nota {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Precarga de producto existente en entrada --- */
+.mov-precarga {
+  display: flex;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background-color: var(--color-canvas);
+  border-radius: var(--radius-md);
+}
+
+.mov-precarga__datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mov-precarga__stock {
+  font-weight: 600;
+}
+
+/* --- Foto en alta --- */
+.mov-form__foto {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.mov-form__foto-preview {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.mov-form__foto-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mov-form__foto-acciones .boton {
+  cursor: pointer;
+}
+
+.mov-form__foto-quitar {
+  border: none;
+  background: transparent;
+  color: var(--bucket-baja);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+@media (max-width: 640px) {
+  .mov-form__fila,
+  .mov-form__fila--4 {
+    grid-template-columns: 1fr 1fr;
+  }
+}

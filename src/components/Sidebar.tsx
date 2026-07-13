@@ -19,7 +19,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/inventario', label: 'Inventario', icon: IconInventario },
   { to: '/panel', label: 'Panel', icon: IconPanel, proximamente: true },
-  { to: '/movimientos', label: 'Movimientos', icon: IconMovimientos, proximamente: true },
+  { to: '/movimientos', label: 'Movimientos', icon: IconMovimientos },
   { to: '/reservas', label: 'Reservas', icon: IconReservas, proximamente: true },
 ]
 
