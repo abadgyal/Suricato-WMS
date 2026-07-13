@@ -16,8 +16,48 @@ export type Categoria = Tables['categoria']['Row']
 export type Perfil = Tables['perfil']['Row']
 export type Cliente = Tables['cliente']['Row']
 export type Evento = Tables['evento']['Row']
+export type Reserva = Tables['reserva']['Row']
 export type Movimiento = Tables['movimiento']['Row']
 export type Rol = Enums['rol']
+
+/** Material aún fuera por par producto–evento (CONTRACTS §1.4/§4). */
+export type UnidadesFuera = Views['v_unidades_fuera_evento']['Row']
+
+/** Par de eventos solapados que sobre-reservan un producto (CONTRACTS §4). */
+export type ConflictoReserva = Views['v_conflictos_reserva']['Row']
+
+/** Ciclo de vida de un evento (DOMAIN §3.5). */
+export type EstadoEvento = Enums['estado_evento']
+
+export const ESTADO_EVENTO_LABEL: Record<EstadoEvento, string> = {
+  planificado: 'Planificado',
+  en_curso: 'En curso',
+  cerrado: 'Cerrado',
+  cancelado: 'Cancelado',
+}
+
+/** Color del chip de estado del evento (variables de tokens.css). */
+export const ESTADO_EVENTO_COLOR_VAR: Record<EstadoEvento, string> = {
+  planificado: 'var(--color-accent)',
+  en_curso: 'var(--bucket-en-evento)',
+  cerrado: 'var(--color-text-secondary)',
+  cancelado: 'var(--bucket-baja)',
+}
+
+/** Estado de una línea de reserva (DOMAIN §3.6). */
+export type EstadoReserva = Enums['estado_reserva']
+
+export const ESTADO_RESERVA_LABEL: Record<EstadoReserva, string> = {
+  activa: 'Activa',
+  cumplida: 'Cumplida',
+  cancelada: 'Cancelada',
+}
+
+export const ESTADO_RESERVA_COLOR_VAR: Record<EstadoReserva, string> = {
+  activa: 'var(--color-accent)',
+  cumplida: 'var(--bucket-en-evento)',
+  cancelada: 'var(--color-text-secondary)',
+}
 
 /** Los tres buckets operativos (DOMAIN §1). El orden es el del medidor de carga. */
 export const BUCKETS = ['disponible', 'en_evento', 'en_reparacion'] as const

@@ -1,0 +1,90 @@
+/* Diálogo genérico (Modal.tsx). Mismo lenguaje visual que la ficha de producto,
+   pero independiente de ella: aquí solo vive la carcasa. */
+
+.dlg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+  background-color: rgba(23, 22, 31, 0.5);
+  backdrop-filter: blur(3px);
+  animation: dlg-overlay-in 0.16s ease;
+}
+
+@keyframes dlg-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.dlg {
+  width: 100%;
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  animation: dlg-in 0.2s ease;
+}
+
+.dlg--md {
+  max-width: 560px;
+}
+
+.dlg--lg {
+  max-width: 860px;
+}
+
+@keyframes dlg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.dlg__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dlg__eyebrow {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.dlg__header h2 {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.dlg__cerrar {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.dlg__cerrar:hover {
+  background-color: var(--color-canvas);
+  color: var(--color-text);
+}
+
+.dlg__body {
+  padding: var(--space-5);
+}
