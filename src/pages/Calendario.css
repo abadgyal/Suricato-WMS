@@ -1,0 +1,325 @@
+.cal {
+  padding: var(--space-6) var(--space-5);
+}
+
+.cal__cab {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.cal__cab h1 {
+  font-size: 26px;
+}
+
+.cal__sub {
+  margin: 4px 0 0;
+  color: var(--color-text-secondary);
+}
+
+.cal__controles {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.cal__vistas {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.cal__vista {
+  padding: 7px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.cal__vista:hover {
+  color: var(--color-text);
+}
+
+.cal__vista--activa {
+  background-color: var(--color-accent);
+  color: #fff;
+}
+
+.cal__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cal__nav .boton {
+  padding: 8px 12px;
+}
+
+.cal__rango {
+  min-width: 150px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* "julio de 2026" → "Julio de 2026" (capitalize tocaría también el "de"). */
+.cal__rango--mes::first-letter {
+  text-transform: uppercase;
+}
+
+.cal__panel {
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+}
+
+/* ============================ Línea de tiempo ============================ */
+.tl {
+  min-width: 720px;
+}
+
+.tl__semanas {
+  display: grid;
+  margin-bottom: var(--space-2);
+}
+
+.tl__semana {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  padding-left: 6px;
+  border-left: 1px solid var(--color-border);
+}
+
+.tl__cuerpo {
+  position: relative;
+  display: grid;
+  grid-auto-rows: 34px;
+  row-gap: 6px;
+  min-height: 120px;
+}
+
+.tl__guia {
+  border-left: 1px solid var(--color-border);
+  pointer-events: none;
+}
+
+/* Hoy: una columna teñida detrás de las barras. */
+.tl__hoy {
+  background-color: var(--color-accent-tint);
+  pointer-events: none;
+}
+
+.tl__vacio {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  align-self: center;
+  text-align: center;
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* La barra es el evento: su color dice el estado; el ancho, cuánto dura. */
+.tl__barra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 0 10px;
+  height: 30px;
+  align-self: center;
+  border: none;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--evento-color) 16%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--evento-color) 45%, transparent);
+  border-left: 4px solid var(--evento-color);
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+.tl__barra:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.tl__barra-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Conflicto: se ve sin leer nada. Avisa, no bloquea. */
+.tl__barra--conflicto {
+  background-color: var(--bucket-en-reparacion-tint);
+  border-color: var(--bucket-en-reparacion);
+  color: var(--color-text);
+}
+
+.tl__barra--corte-izq {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-style: dashed;
+}
+
+.tl__barra--corte-der {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right-style: dashed;
+}
+
+/* ================================= Mes ================================== */
+.mes {
+  min-width: 720px;
+}
+
+.mes__dias,
+.mes__fila {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.mes__dia-cab {
+  padding: 6px 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.mes__celda {
+  min-height: 104px;
+  padding: 6px;
+  border-top: 1px solid var(--color-border);
+  border-left: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mes__fila:last-child .mes__celda {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.mes__celda:last-child {
+  border-right: 1px solid var(--color-border);
+}
+
+.mes__celda--fuera {
+  background-color: var(--color-canvas);
+}
+
+.mes__celda--fuera .mes__numero {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.mes__celda--hoy {
+  background-color: var(--color-accent-tint);
+}
+
+.mes__numero {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.mes__celda--hoy .mes__numero {
+  color: var(--color-accent);
+}
+
+.mes__evento {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 3px 6px;
+  border: none;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--evento-color);
+  background-color: color-mix(in srgb, var(--evento-color) 14%, var(--color-surface));
+  color: var(--color-text);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.mes__evento:hover {
+  background-color: color-mix(in srgb, var(--evento-color) 26%, var(--color-surface));
+}
+
+.mes__evento--conflicto {
+  background-color: var(--bucket-en-reparacion-tint);
+  border-left-color: var(--bucket-en-reparacion);
+  color: var(--bucket-en-reparacion);
+}
+
+.mes__evento-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================ Detalle (modal) =========================== */
+.cal__detalle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cal__detalle-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-secondary);
+}
+
+.cal__sin-conflicto {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background-color: var(--bucket-disponible-tint);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.cal__ir {
+  align-self: flex-start;
+}
+
+.cal__inicio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+.cal__link {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.cal__link:hover {
+  text-decoration: underline;
+}
