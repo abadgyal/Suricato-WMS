@@ -201,6 +201,12 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Fecha:** 2026-07-13.
 - **Estado:** ✅ RESUELTA en S-E (2026-07-13). `useInventario` usa ya `useRealtime`
   (conservando su debounce de 250 ms) y escucha también `reserva`.
+- **Nota (S-G, 2026-07-15):** al verificar el tiempo real en vivo saltó un error del
+  cliente unificado — «cannot add postgres_changes callbacks after subscribe()»:
+  la conexión inicial y el evento de auth corrían a la vez y reutilizaban el canal
+  cacheado por nombre. Corregido en `useRealtime` (cola serializada + nombre de canal
+  único por intento). Verificado sin errores en consola y con el inventario/historial
+  refrescando en vivo.
 
 ### [S-E] `dar_de_baja` desde `en_evento` descuadra `v_unidades_fuera_evento`
 - **Qué:** dar de baja unidades cuyo bucket de origen es `en_evento` baja el contador
