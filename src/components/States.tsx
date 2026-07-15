@@ -39,20 +39,22 @@ export function EmptyState({ titulo, mensaje, accion, icono }: EmptyStateProps) 
 
 interface ErrorStateProps {
   mensaje: string
+  /** Título del error. Por defecto, genérico; cada pantalla puede concretarlo. */
+  titulo?: string
   onReintentar?: () => void
 }
 
 /** Estado de error: explica qué pasó y cómo seguir, sin vaguedad. */
-export function ErrorState({ mensaje, onReintentar }: ErrorStateProps) {
+export function ErrorState({ mensaje, titulo = 'No se pudieron cargar los datos', onReintentar }: ErrorStateProps) {
   return (
-    <div className="estado estado--error">
+    <div className="estado estado--error" role="alert">
       <div className="estado__icono estado__icono--error" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
           <path d="M12 8v5M12 16.5v.5" />
           <path d="M10.3 3.9 2.5 18a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" strokeLinejoin="round" />
         </svg>
       </div>
-      <h3 className="estado__titulo">No se pudo cargar el inventario</h3>
+      <h3 className="estado__titulo">{titulo}</h3>
       <p className="estado__mensaje">{mensaje}</p>
       {onReintentar && (
         <div className="estado__accion">

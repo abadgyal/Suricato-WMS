@@ -150,7 +150,7 @@ export function Inventario() {
         {cargando ? (
           <TableSkeleton />
         ) : error ? (
-          <ErrorState mensaje={error} onReintentar={recargar} />
+          <ErrorState mensaje={error} titulo="No se pudo cargar el inventario" onReintentar={recargar} />
         ) : productos.length === 0 ? (
           <EmptyState
             icono={<IconInventario size={26} />}

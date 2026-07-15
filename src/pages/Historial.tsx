@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { clienteDeMovimiento, useMovimientos } from '../hooks/useMovimientos'
+import { clienteDeMovimiento, useHistorial } from '../hooks/useMovimientos'
 import type { TipoMovimiento } from '../lib/domain'
 import { MovimientoBadge } from '../components/MovimientoBadge'
 import { ClienteChip } from '../components/ClienteChip'
@@ -20,17 +20,17 @@ const FILTROS: { id: string; label: string; tipo: TipoMovimiento | null }[] = [
 
 /** Historial completo e inmutable de movimientos (SPEC §10). */
 export function Historial() {
-  const { movimientos, cargando, error, recargar } = useMovimientos()
   const [filtro, setFiltro] = useState('todos')
   const [busqueda, setBusqueda] = useState('')
 
   const tipoFiltro = FILTROS.find((f) => f.id === filtro)?.tipo ?? null
+  const { movimientos, cargando, cargandoMas, error, hayMas, total, cargarMas, recargar } =
+    useHistorial(tipoFiltro)
 
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
+    if (!q) return movimientos
     return movimientos.filter((m) => {
-      if (tipoFiltro && m.tipo !== tipoFiltro) return false
-      if (!q) return true
       const campos = [
         m.producto?.nombre,
         m.usuario?.nombre,
@@ -40,7 +40,9 @@ export function Historial() {
       ]
       return campos.some((c) => (c ?? '').toLowerCase().includes(q))
     })
-  }, [movimientos, tipoFiltro, busqueda])
+  }, [movimientos, busqueda])
+
+  const buscando = busqueda.trim().length > 0
 
   return (
     <div className="historial">
@@ -48,7 +50,13 @@ export function Historial() {
         <div>
           <h1>Historial</h1>
           <p className="historial__sub">
-            {cargando ? 'Cargando…' : `${visibles.length} movimiento${visibles.length === 1 ? '' : 's'}`}
+            {cargando
+              ? 'Cargando…'
+              : buscando
+                ? `${visibles.length} de ${movimientos.length} cargados coinciden`
+                : total != null
+                  ? `${movimientos.length} de ${total} movimiento${total === 1 ? '' : 's'}`
+                  : `${movimientos.length} movimiento${movimientos.length === 1 ? '' : 's'}`}
           </p>
         </div>
         <div className="historial__buscador">
@@ -82,7 +90,7 @@ export function Historial() {
         {cargando ? (
           <TableSkeleton />
         ) : error ? (
-          <ErrorState mensaje={error} onReintentar={recargar} />
+          <ErrorState mensaje={error} titulo="No se pudo cargar el historial" onReintentar={recargar} />
         ) : movimientos.length === 0 ? (
           <EmptyState
             icono={<IconMovimientos size={26} />}
@@ -153,6 +161,23 @@ export function Historial() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {!cargando && !error && hayMas && (
+          <div className="historial__mas">
+            {buscando && (
+              <p className="historial__mas-aviso" role="status">
+                La búsqueda solo mira los movimientos ya cargados. Carga más para ampliarla.
+              </p>
+            )}
+            <button
+              className="boton boton--secundario"
+              onClick={cargarMas}
+              disabled={cargandoMas}
+            >
+              {cargandoMas ? 'Cargando…' : 'Cargar más movimientos'}
+            </button>
           </div>
         )}
       </section>

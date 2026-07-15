@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Movimiento } from '../lib/domain'
+import type { Movimiento, TipoMovimiento } from '../lib/domain'
 import { useRealtime } from './useRealtime'
 
 /** Cliente resuelto por join, con lo justo para pintar su chip de color. */
@@ -76,4 +76,86 @@ export function useMovimientos(limite = 500): HistorialState {
   useRealtime(['movimiento'], cargar)
 
   return { movimientos, cargando, error, recargar: () => void cargar() }
+}
+
+export interface HistorialPaginado {
+  movimientos: MovimientoConJoins[]
+  /** Primera carga (o recarga tras cambiar de tipo). */
+  cargando: boolean
+  /** Cargando la siguiente página con «Cargar más». */
+  cargandoMas: boolean
+  error: string | null
+  /** Quedan movimientos por cargar más allá de los ya leídos. */
+  hayMas: boolean
+  /** Total de movimientos del tipo activo en la BD (para el contador). */
+  total: number | null
+  cargarMas: () => void
+  recargar: () => void
+}
+
+/**
+ * Historial paginado por «ventana creciente»: lee siempre el rango
+ * `[0, páginas·tamaño)` de `movimiento` ordenado por fecha desc. «Cargar más»
+ * amplía la ventana; un cambio por Realtime revalida la ventana actual (así los
+ * movimientos nuevos aparecen arriba sin duplicar ni descuadrar el conteo).
+ *
+ * El filtro de **tipo** se empuja a la BD (`eq('tipo', …)`) para que recorra todo
+ * el histórico, no solo lo ya cargado. La búsqueda por texto se aplica en cliente
+ * sobre lo cargado (deuda [S-D]: paginación sustituye al viejo `.limit(500)`).
+ */
+export function useHistorial(tipo: TipoMovimiento | null, tamanoPagina = 100): HistorialPaginado {
+  const [movimientos, setMovimientos] = useState<MovimientoConJoins[]>([])
+  const [cargando, setCargando] = useState(true)
+  const [cargandoMas, setCargandoMas] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [total, setTotal] = useState<number | null>(null)
+  const cargaRef = useRef(0)
+  const paginasRef = useRef(1)
+
+  const leer = useCallback(
+    async (paginas: number, esMas: boolean) => {
+      const id = ++cargaRef.current
+      if (esMas) setCargandoMas(true)
+
+      let q = supabase
+        .from('movimiento')
+        .select(SELECT, { count: 'exact' })
+        .order('creado_en', { ascending: false })
+        .range(0, paginas * tamanoPagina - 1)
+      if (tipo) q = q.eq('tipo', tipo)
+
+      const { data, error: err, count } = await q
+
+      if (id !== cargaRef.current) return
+      if (err) {
+        setError(err.message)
+      } else {
+        setError(null)
+        setMovimientos((data ?? []) as unknown as MovimientoConJoins[])
+        setTotal(count ?? null)
+      }
+      setCargando(false)
+      setCargandoMas(false)
+    },
+    [tipo, tamanoPagina],
+  )
+
+  // Al cambiar de tipo (o al montar) se reinicia la ventana a la primera página.
+  useEffect(() => {
+    paginasRef.current = 1
+    setCargando(true)
+    void leer(1, false)
+  }, [leer])
+
+  const cargarMas = useCallback(() => {
+    paginasRef.current += 1
+    void leer(paginasRef.current, true)
+  }, [leer])
+
+  const recargar = useCallback(() => void leer(paginasRef.current, false), [leer])
+
+  useRealtime(['movimiento'], recargar)
+
+  const hayMas = total != null && movimientos.length < total
+  return { movimientos, cargando, cargandoMas, error, hayMas, total, cargarMas, recargar }
 }
