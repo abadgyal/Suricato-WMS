@@ -284,6 +284,9 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
   (`update auth.users set encrypted_password = null where email like '%.demo@suricato.local'`),
   o borrarlas si el histórico de ejemplo ya no hace falta.
 - **Fecha:** 2026-07-13.
+- **Estado (S-G, 2026-07-15):** herramienta lista — `scripts/purge-demo.sql` borra las
+  tres cuentas `%@suricato.local` (y todos los datos demo). Lo ejecuta el humano antes
+  del go-live (ver `docs/PURGE.md`); por política (CLAUDE.md §7) Claude no toca usuarios.
 
 ### [S-F] `cliente.parent_id` queda en la BD sin uso
 - **Qué:** la cartera es una lista plana (decisión de S-F): la UI ignora `parent_id`
