@@ -118,6 +118,9 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** S-G (deploy): auto-hospedar las fuentes (woff2 + `@font-face`)
   para rendimiento y privacidad, sin llamada a terceros.
 - **Fecha:** 2026-07-09.
+- **Estado:** ✅ RESUELTA en S-G (2026-07-15). Las 6 fuentes (subconjunto latino) se
+  sirven desde `public/fonts/` vía `src/styles/fonts.css`; `tokens.css` ya no importa
+  la CDN de Google. Cómo regenerarlas: `docs/DEPLOY.md`.
 
 ### [S-C] Fotos de producto: se asume bucket de Storage `productos` público
 - **Qué:** `lib/format.ts` genera la URL de foto con `storage.from('productos')
@@ -182,6 +185,10 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
   infinito es trabajo transversal.
 - **Cuándo se resuelve:** S-G (transversales) o cuando el log supere ~500 filas.
 - **Fecha:** 2026-07-13.
+- **Estado:** ✅ RESUELTA en S-G (2026-07-15). `useHistorial` pagina por «ventana
+  creciente» (`.range`) con «Cargar más»; el filtro de tipo se empuja a la BD y el
+  contador muestra «N de TOTAL». El `useMovimientos(limite)` fijo se conserva solo
+  para los 8 recientes del panel.
 
 ### [S-D] Dos implementaciones de Realtime conviviendo
 - **Qué:** `useInventario` (S-C) trae su propia suscripción Realtime inline, mientras
@@ -308,3 +315,28 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Cuándo se resuelve:** si aparecen falsos negativos en uso real, reescribirla como
   agregado por producto y ventana de fechas en vez de por pares.
 - **Fecha:** 2026-07-13.
+
+---
+
+## Triage de S-G (2026-07-15)
+
+Repaso completo de la deuda al cerrar S-G (producción). **Cerrado en S-G:** paginación
+del historial y auto-hospedaje de fuentes (arriba). **Se deja abierto, justificado:**
+
+- **Optimizaciones por volumen** (Realtime revalida el inventario entero, ficha de
+  cliente lee el catálogo completo): correctas para decenas–cientos de referencias; el
+  disparador para tocarlas es el mismo (miles de referencias) y no se ha alcanzado.
+  Meterlas ahora es complejidad sin beneficio medible.
+- **Decisiones de producto estables** (`bucket_destino` text, autor no editable,
+  `username` en metadata, check-in no atómico, `cliente.parent_id` sin uso): no son
+  atajos, son diseño acordado; se documentan por si se revisan.
+- **Guardias de dominio pendientes** (trigger/RPC que impida cerrar un evento con
+  material fuera; flujo de cancelar evento; que la salida directa arranque el evento;
+  `v_conflictos_reserva` por pares): son **lógica de negocio nueva o cambios de
+  contrato**. El encargo de S-G es dejar la app desplegable sin funcionalidad de
+  negocio nueva, así que **no se tocan aquí**; se retoman con Persona A cuando el
+  negocio los priorice. Ninguna bloquea el go-live (todas tienen camino operativo).
+- **Cuentas de prueba en la BD remota** ([S-F]): las trata el script de purga
+  (`scripts/purge-demo.sql`, ver `docs/PURGE.md`). Por política (CLAUDE.md §7) **no se
+  crean ni modifican usuarios/contraseñas desde aquí**: el borrado de las cuentas demo
+  y de `trabajador.sf` lo ejecuta el humano con ese script antes del go-live.
