@@ -27,7 +27,13 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  overflow: hidden;
+  /* En móvil la tabla es más ancha que el panel: que scrolle en horizontal
+     dentro de su caja en vez de recortarse (antes: overflow hidden). */
+  overflow-x: auto;
+}
+
+.admin__tabla {
+  min-width: 640px;
 }
 
 .admin__tabla {

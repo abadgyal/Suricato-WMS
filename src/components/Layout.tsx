@@ -9,6 +9,11 @@ export function Layout() {
 
   return (
     <div className="layout">
+      {/* Salto al contenido: primer tabulable de la página (a11y por teclado). */}
+      <a href="#contenido" className="skip-link">
+        Saltar al contenido
+      </a>
+
       {/* Barra superior solo en móvil, para abrir el menú. */}
       <div className="layout__topbar">
         <button
@@ -31,7 +36,7 @@ export function Layout() {
         <div className="layout__backdrop" onClick={() => setMenuAbierto(false)} aria-hidden="true" />
       )}
 
-      <main className="layout__main">
+      <main className="layout__main" id="contenido">
         <Outlet />
       </main>
     </div>

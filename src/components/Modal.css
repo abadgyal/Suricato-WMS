@@ -29,6 +29,12 @@
   animation: dlg-in 0.2s ease;
 }
 
+/* El diálogo recibe foco al abrir (a11y), pero no debe pintar un anillo: el foco
+   real lo llevan sus controles. El foco por teclado dentro sí se ve (:focus-visible). */
+.dlg:focus {
+  outline: none;
+}
+
 .dlg--md {
   max-width: 560px;
 }
