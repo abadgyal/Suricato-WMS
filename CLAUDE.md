@@ -37,6 +37,9 @@ almacen-app2/
 4. **Commits pequeños y convencionales** (`feat:`, `fix:`, `chore:`, `test:`, `docs:`).
 5. Lo que pospongas se anota en `DEBT.md`. Nada de deuda silenciosa.
 6. Si escribes lógica de negocio, **escribe también sus tests**. Verifica tu trabajo.
+7. **Credenciales:** si necesitas credenciales para probar algo, **pídelas al humano**.
+   NUNCA crees usuarios ni asignes/cambies contraseñas por tu cuenta (en `auth.users`
+   ni por Edge Function). En un sprint anterior se hizo y no debe repetirse.
 
 ## Reglas del dominio — críticas
 - El frontend **NUNCA** escribe las columnas de bucket (`disponible`, `en_evento`,
