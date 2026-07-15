@@ -39,13 +39,14 @@ jobs:
         run: |
           # Se usa pg_dump desde una imagen postgres:17 para que la versión del cliente
           # case con la del servidor Supabase y evitar el error de "server version
-          # mismatch". La URL se pasa por variable de entorno, nunca por argumento
-          # (los argumentos son visibles en la lista de procesos).
+          # mismatch". La URL se pasa por variable de entorno (-e) y se expande DENTRO
+          # del contenedor (sh -c '...'), nunca en la línea de `docker run` del host,
+          # para que no aparezca en la lista de procesos.
           STAMP="$(date -u +%Y%m%d-%H%M%S)"
           echo "dump_file=backup-${STAMP}.sql" >> "$GITHUB_ENV"
           docker run --rm -e PGCONNECT_TIMEOUT=30 -e SUPABASE_DB_URL \
             postgres:17 \
-            pg_dump --no-owner --no-privileges "$SUPABASE_DB_URL" > "backup-${STAMP}.sql"
+            sh -c 'pg_dump --no-owner --no-privileges "$SUPABASE_DB_URL"' > "backup-${STAMP}.sql"
           echo "Tamaño del volcado:"
           ls -lh "backup-${STAMP}.sql"
 
