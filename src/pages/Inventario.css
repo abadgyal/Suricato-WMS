@@ -46,6 +46,14 @@
   font-weight: 500;
 }
 
+/* Acciones de cabecera: buscador + export. */
+.inventario__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 /* --- Buscador --- */
 .inventario__buscador {
   display: flex;

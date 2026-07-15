@@ -78,6 +78,32 @@ export function useMovimientos(limite = 500): HistorialState {
   return { movimientos, cargando, error, recargar: () => void cargar() }
 }
 
+/**
+ * Trae TODO el log de movimientos (opcionalmente de un tipo), paginando en lotes
+ * de 1000 hasta agotarlo. Para el export «todo el historial»: no está atado a la
+ * ventana de la UI. Puede ser una lectura grande; se llama solo bajo demanda.
+ */
+export async function obtenerTodosMovimientos(
+  tipo: TipoMovimiento | null,
+): Promise<MovimientoConJoins[]> {
+  const filas: MovimientoConJoins[] = []
+  const paso = 1000
+  for (let desde = 0; ; desde += paso) {
+    let q = supabase
+      .from('movimiento')
+      .select(SELECT)
+      .order('creado_en', { ascending: false })
+      .range(desde, desde + paso - 1)
+    if (tipo) q = q.eq('tipo', tipo)
+    const { data, error } = await q
+    if (error) throw new Error(error.message)
+    const lote = (data ?? []) as unknown as MovimientoConJoins[]
+    filas.push(...lote)
+    if (lote.length < paso) break
+  }
+  return filas
+}
+
 export interface HistorialPaginado {
   movimientos: MovimientoConJoins[]
   /** Primera carga (o recarga tras cambiar de tipo). */

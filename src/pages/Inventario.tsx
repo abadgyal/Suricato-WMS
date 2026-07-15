@@ -1,14 +1,56 @@
 import { useMemo, useState } from 'react'
 import { useInventario } from '../hooks/useInventario'
-import { BUCKETS, BUCKET_LABEL, type Bucket, type ProductoDisponible } from '../lib/domain'
+import {
+  BUCKETS,
+  BUCKET_LABEL,
+  type Bucket,
+  type Categoria,
+  type ProductoDisponible,
+} from '../lib/domain'
 import { InventoryTable } from '../components/InventoryTable'
 import { ProductModal } from '../components/ProductModal'
 import { Lightbox } from '../components/Lightbox'
+import { ExportMenu } from '../components/ExportMenu'
+import type { Registro } from '../lib/export'
 import { TableSkeleton, EmptyState, ErrorState } from '../components/States'
 import { IconBuscar, IconInventario } from '../components/icons'
 import './Inventario.css'
 
 type Orden = 'nombre' | 'stock' | 'ubicacion'
+
+/** Columnas del export de inventario, en orden. */
+const COLUMNAS_INV = [
+  'Nombre',
+  'Categoría',
+  'Ubicación',
+  'Disponible',
+  'En evento',
+  'En reparación',
+  'Reservado',
+  'Disponible real',
+  'Total',
+  'Stock mínimo',
+  'Bajo mínimo',
+]
+
+function inventarioARegistro(
+  p: ProductoDisponible,
+  categorias: Map<string, Categoria>,
+): Registro {
+  return {
+    Nombre: p.nombre ?? '',
+    Categoría: p.categoria_id ? (categorias.get(p.categoria_id)?.nombre ?? '') : '',
+    Ubicación: p.ubicacion ?? '',
+    Disponible: p.disponible ?? 0,
+    'En evento': p.en_evento ?? 0,
+    'En reparación': p.en_reparacion ?? 0,
+    Reservado: p.reservado ?? 0,
+    'Disponible real': p.disponible_real ?? 0,
+    Total: p.total ?? 0,
+    'Stock mínimo': p.stock_minimo ?? 0,
+    'Bajo mínimo': p.bajo_minimo ? 'Sí' : 'No',
+  }
+}
 
 export function Inventario() {
   const { productos, categorias, cargando, error, recargar, actualizando } = useInventario()
@@ -77,15 +119,34 @@ export function Inventario() {
           </p>
         </div>
 
-        <div className="inventario__buscador">
-          <IconBuscar size={18} />
-          <input
-            className="inventario__buscador-input"
-            type="search"
-            placeholder="Buscar por nombre…"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            aria-label="Buscar producto por nombre"
+        <div className="inventario__acciones">
+          <div className="inventario__buscador">
+            <IconBuscar size={18} />
+            <input
+              className="inventario__buscador-input"
+              type="search"
+              placeholder="Buscar por nombre…"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              aria-label="Buscar producto por nombre"
+            />
+          </div>
+          <ExportMenu
+            base="inventario"
+            hoja="Inventario"
+            columnas={COLUMNAS_INV}
+            actual={{
+              etiqueta: hayFiltros ? 'Vista filtrada' : 'Todo',
+              obtener: () => visibles.map((p) => inventarioARegistro(p, categorias)),
+            }}
+            todo={
+              hayFiltros
+                ? {
+                    etiqueta: 'Todo el inventario',
+                    obtener: () => productos.map((p) => inventarioARegistro(p, categorias)),
+                  }
+                : undefined
+            }
           />
         </div>
       </header>

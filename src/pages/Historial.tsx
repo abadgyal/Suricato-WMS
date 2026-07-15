@@ -1,12 +1,52 @@
 import { useMemo, useState } from 'react'
-import { clienteDeMovimiento, useHistorial } from '../hooks/useMovimientos'
-import type { TipoMovimiento } from '../lib/domain'
+import {
+  clienteDeMovimiento,
+  obtenerTodosMovimientos,
+  useHistorial,
+  type MovimientoConJoins,
+} from '../hooks/useMovimientos'
+import { TIPO_MOV_LABEL, type TipoMovimiento } from '../lib/domain'
 import { MovimientoBadge } from '../components/MovimientoBadge'
 import { ClienteChip } from '../components/ClienteChip'
+import { ExportMenu } from '../components/ExportMenu'
+import type { Registro } from '../lib/export'
 import { TableSkeleton, EmptyState, ErrorState } from '../components/States'
 import { formatFechaHora } from '../lib/format'
 import { IconBuscar, IconMovimientos } from '../components/icons'
 import './Historial.css'
+
+/** Columnas del export de movimientos, en orden. */
+const COLUMNAS_MOV = [
+  'Fecha',
+  'Tipo',
+  'Producto',
+  'Cliente',
+  'Registró',
+  'Unidades',
+  'Valor anterior',
+  'Valor nuevo',
+  'Origen',
+  'Destino',
+  'Motivo',
+  'Evento',
+]
+
+function movimientoARegistro(m: MovimientoConJoins): Registro {
+  return {
+    Fecha: formatFechaHora(m.creado_en),
+    Tipo: TIPO_MOV_LABEL[m.tipo],
+    Producto: m.producto?.nombre ?? '',
+    Cliente: clienteDeMovimiento(m)?.nombre ?? '',
+    Registró: m.usuario?.nombre ?? '',
+    Unidades: m.unidades ?? '',
+    'Valor anterior': m.valor_anterior ?? '',
+    'Valor nuevo': m.valor_nuevo ?? '',
+    Origen: m.bucket_origen ?? '',
+    Destino: m.bucket_destino ?? '',
+    Motivo: m.motivo ?? '',
+    Evento: m.evento?.nombre ?? '',
+  }
+}
 
 /** Filtros agrupados de la UI → tipos reales de `movimiento`. */
 const FILTROS: { id: string; label: string; tipo: TipoMovimiento | null }[] = [
@@ -59,15 +99,35 @@ export function Historial() {
                   : `${movimientos.length} movimiento${movimientos.length === 1 ? '' : 's'}`}
           </p>
         </div>
-        <div className="historial__buscador">
-          <IconBuscar size={18} />
-          <input
-            className="historial__buscador-input"
-            type="search"
-            placeholder="Buscar producto, persona, cliente, motivo…"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            aria-label="Buscar en el historial"
+        <div className="historial__acciones">
+          <div className="historial__buscador">
+            <IconBuscar size={18} />
+            <input
+              className="historial__buscador-input"
+              type="search"
+              placeholder="Buscar producto, persona, cliente, motivo…"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              aria-label="Buscar en el historial"
+            />
+          </div>
+          <ExportMenu
+            base="movimientos"
+            hoja="Movimientos"
+            columnas={COLUMNAS_MOV}
+            actual={{
+              etiqueta: 'Vista actual',
+              obtener: () => visibles.map(movimientoARegistro),
+            }}
+            todo={
+              tipoFiltro || buscando || hayMas
+                ? {
+                    etiqueta: 'Todo el historial',
+                    obtener: async () =>
+                      (await obtenerTodosMovimientos(null)).map(movimientoARegistro),
+                  }
+                : undefined
+            }
           />
         </div>
       </header>

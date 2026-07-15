@@ -20,6 +20,13 @@
   color: var(--color-text-secondary);
 }
 
+.historial__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
 .historial__buscador {
   display: flex;
   align-items: center;
