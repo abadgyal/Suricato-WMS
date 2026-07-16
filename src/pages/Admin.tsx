@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../auth/useAuth'
-import { crearUsuario, useUsuarios } from '../hooks/useUsuarios'
+import { crearUsuario, MIN_PASSWORD, resetearPassword, useUsuarios } from '../hooks/useUsuarios'
 import { llamarRpc } from '../lib/rpc'
 import type { Perfil, Rol } from '../lib/domain'
 import { Modal } from '../components/Modal'
@@ -131,6 +131,112 @@ function AltaUsuarioForm({ onClose, onCreado }: { onClose: () => void; onCreado:
 }
 
 /**
+ * Reseteo de contraseña: invoca la Edge Function `resetear-password` (service role).
+ * No hay recuperación por email — el admin fija la contraseña y se la comunica a la
+ * persona por un canal aparte, así que el diálogo lo deja claro.
+ */
+function ResetPasswordForm({
+  usuario,
+  onClose,
+  onHecho,
+}: {
+  usuario: Perfil
+  onClose: () => void
+  onHecho: () => void
+}) {
+  const toast = useToast()
+  const [password, setPassword] = useState('')
+  const [confirmacion, setConfirmacion] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const cortaAun = password !== '' && password.length < MIN_PASSWORD
+  const noCoinciden = confirmacion !== '' && confirmacion !== password
+  const valido = password.length >= MIN_PASSWORD && confirmacion === password
+
+  async function enviar(e: React.FormEvent) {
+    e.preventDefault()
+    if (!valido) return
+    setEnviando(true)
+    setError(null)
+    try {
+      await resetearPassword(usuario.id, password)
+      toast.exito(`Contraseña de «${usuario.nombre}» restablecida. Comunícasela en persona.`)
+      onHecho()
+    } catch (err) {
+      // Como en el alta: el error se ve dentro del formulario, junto al campo.
+      setError((err as Error).message)
+    } finally {
+      setEnviando(false)
+    }
+  }
+
+  return (
+    <Modal titulo="Restablecer contraseña" eyebrow={usuario.nombre} onClose={onClose}>
+      <form className="mov-form" onSubmit={enviar}>
+        {error && <p className="admin__error">{error}</p>}
+
+        <p className="admin__aviso">
+          La aplicación <strong>no envía correos</strong>: apunta esta contraseña y
+          comunícasela a «{usuario.nombre}» por un canal aparte. La sesión que tenga
+          abierta seguirá activa hasta que cierre sesión.
+        </p>
+
+        <div className="campo">
+          <label className="campo__label" htmlFor="reset-password">
+            Nueva contraseña
+          </label>
+          <input
+            id="reset-password"
+            className="input"
+            type="text"
+            value={password}
+            autoFocus
+            autoComplete="new-password"
+            placeholder={`Mínimo ${MIN_PASSWORD} caracteres`}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {cortaAun && (
+            <span className="campo__error">
+              Debe tener al menos {MIN_PASSWORD} caracteres.
+            </span>
+          )}
+        </div>
+
+        <div className="campo">
+          <label className="campo__label" htmlFor="reset-password-confirmacion">
+            Repite la contraseña
+          </label>
+          <input
+            id="reset-password-confirmacion"
+            className="input"
+            type="text"
+            value={confirmacion}
+            autoComplete="new-password"
+            onChange={(e) => setConfirmacion(e.target.value)}
+          />
+          {noCoinciden && <span className="campo__error">Las contraseñas no coinciden.</span>}
+        </div>
+
+        <div className="mov-form__acciones">
+          <button
+            type="button"
+            className="boton boton--secundario"
+            onClick={onClose}
+            disabled={enviando}
+          >
+            Cancelar
+          </button>
+          <button type="submit" className="boton boton--primario" disabled={!valido || enviando}>
+            {enviando ? 'Restableciendo…' : 'Restablecer contraseña'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+}
+
+/**
  * Panel de administración (SPEC §13). Solo admin: la ruta lo comprueba y, además,
  * el servidor lo garantiza — la Edge Function `crear-usuario` exige un admin
  * activo y `desactivar_usuario` lanza WMS009 si no lo eres (CONTRACTS §1.3).
@@ -147,6 +253,7 @@ export function Admin() {
 
   const [creando, setCreando] = useState(false)
   const [desactivando, setDesactivando] = useState<Perfil | null>(null)
+  const [reseteando, setReseteando] = useState<Perfil | null>(null)
   const [enviando, setEnviando] = useState(false)
 
   async function desactivar() {
@@ -214,6 +321,16 @@ export function Admin() {
                   </td>
                   <td className="admin__fecha">{formatFecha(u.creado_en)}</td>
                   <td className="admin__acciones">
+                    {/*
+                      La contraseña del admin principal solo la cambia él mismo: al
+                      resto de admins ni se les ofrece, igual que con la baja. El
+                      servidor lo vuelve a comprobar (403).
+                    */}
+                    {u.activo && (!u.es_principal || u.id === perfil?.id) && (
+                      <button className="boton boton--secundario" onClick={() => setReseteando(u)}>
+                        Restablecer contraseña
+                      </button>
+                    )}
                     {/* Invariante 8: al admin principal no se le ofrece la baja. */}
                     {u.activo && !u.es_principal && (
                       <button className="boton boton--secundario" onClick={() => setDesactivando(u)}>
@@ -235,6 +352,14 @@ export function Admin() {
             setCreando(false)
             recargar()
           }}
+        />
+      )}
+
+      {reseteando && (
+        <ResetPasswordForm
+          usuario={reseteando}
+          onClose={() => setReseteando(null)}
+          onHecho={() => setReseteando(null)}
         />
       )}
 

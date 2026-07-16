@@ -96,3 +96,48 @@ export async function crearUsuario(datos: AltaUsuario): Promise<void> {
   if (detalle) throw new Error(detalle)
   throw new Error(mensajeError(error) || 'No se pudo crear el usuario.')
 }
+
+/** Longitud mínima de contraseña; la misma que exigen el alta y el servidor. */
+export const MIN_PASSWORD = 6
+
+/**
+ * Restablece la contraseña de un usuario vía la Edge Function `resetear-password`
+ * (service role en el servidor). No hay recuperación por email: el admin fija la
+ * contraseña y se la comunica a la persona por un canal aparte.
+ *
+ * La función valida que el llamante sea un admin activo y protege al admin
+ * principal (solo él puede cambiar la suya).
+ */
+export async function resetearPassword(perfilId: string, password: string): Promise<void> {
+  const { error } = await supabase.functions.invoke('resetear-password', {
+    body: { id: perfilId, password },
+  })
+
+  if (!error) return
+
+  // Igual que en `crearUsuario`: el cuerpo `{ error: "..." }` viaja dentro del
+  // FunctionsHttpError y hay que leer la respuesta para saber qué pasó.
+  let detalle = ''
+  let status: number | undefined
+  const contexto = (error as { context?: Response }).context
+  if (contexto && typeof contexto.json === 'function') {
+    status = contexto.status
+    try {
+      const cuerpo = (await contexto.json()) as { error?: string }
+      detalle = cuerpo.error ?? ''
+    } catch {
+      detalle = ''
+    }
+  }
+
+  if (status === 404) {
+    throw new Error('Ese usuario ya no existe. Recarga la lista.')
+  }
+  if (status === 401 || status === 403) {
+    // El servidor distingue «no eres admin» de «esa cuenta es la del principal»:
+    // su mensaje es más preciso que cualquier texto genérico de aquí.
+    throw new Error(detalle || 'No tienes permiso para restablecer contraseñas.')
+  }
+  if (detalle) throw new Error(detalle)
+  throw new Error(mensajeError(error) || 'No se pudo restablecer la contraseña.')
+}
