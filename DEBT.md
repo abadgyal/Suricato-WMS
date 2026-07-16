@@ -349,3 +349,9 @@ del historial y auto-hospedaje de fuentes (arriba). **Se deja abierto, justifica
   (`scripts/purge-demo.sql`, ver `docs/PURGE.md`). Por política (CLAUDE.md §7) **no se
   crean ni modifican usuarios/contraseñas desde aquí**: el borrado de las cuentas demo
   y de `trabajador.sf` lo ejecuta el humano con ese script antes del go-live.
+- **Boilerplate duplicado en las Edge Functions** ([reset-password]): `resetear-password`
+  repite el bloque de `crear-usuario` que verifica el JWT del llamante y su rol de admin
+  activo (~30 líneas), en vez de extraerlo a `supabase/functions/_shared/`. Se dejó así
+  a propósito: cada función queda autocontenida y desplegable por separado, y el alta
+  —que funciona en producción— no se toca por un cambio que no la necesita. Si aparece
+  una tercera función con la misma guarda, ahí sí toca extraer el helper compartido.

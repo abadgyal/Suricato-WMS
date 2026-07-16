@@ -172,6 +172,13 @@ Cartera con visibilidad de material, eventos e historial.
 - **Usuarios** (`perfil`): crear (email, nombre, contraseña, rol) vía Edge Function
   con service role, listar con su rol y estado (activo / dado de baja), y dar de baja
   lógica (excepto el `es_principal`, que ni siquiera muestra el botón — invariante 8).
+- **Restablecer contraseña**: el admin fija una contraseña nueva a cualquier usuario
+  activo vía la Edge Function `resetear-password` (service role). **No hay
+  recuperación por email** — la app no envía correos: el admin comunica la contraseña
+  por un canal aparte, y el diálogo lo advierte. La contraseña del `es_principal`
+  solo puede cambiarla él mismo (a los demás admins no se les ofrece el botón, y el
+  servidor lo comprueba igualmente): sin esa guarda, un admin secundario podría
+  apropiarse de la cuenta que §15 declara protegida.
 - Las **categorías** tienen pantalla propia (§12) y no son solo del admin.
 
 ## 14. Características transversales
