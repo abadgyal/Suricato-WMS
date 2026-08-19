@@ -90,6 +90,12 @@
   grid-template-columns: repeat(4, 1fr);
 }
 
+/* Sin esto las columnas no bajan de su `min-content` (un `input[type=date]` es
+   ancho) y la rejilla desborda su contenedor en vez de encogerse. */
+.mov-form__fila > * {
+  min-width: 0;
+}
+
 .mov-form__acciones {
   display: flex;
   justify-content: flex-end;
@@ -303,6 +309,12 @@
   .mov-form__fila,
   .mov-form__fila--4 {
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* Dos `input[type=date]` no caben a dos columnas dentro del diálogo: el de la
+     derecha se salía por el borde. Se apilan. */
+  .mov-form__fila--fechas {
+    grid-template-columns: 1fr;
   }
 
   /* El resumen del producto deja de ir en segunda columna y se apila debajo:

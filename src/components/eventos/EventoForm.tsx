@@ -108,7 +108,9 @@ export function EventoForm({ evento, clientes, onClose, onGuardado }: EventoForm
           </select>
         </div>
 
-        <div className="mov-form__fila">
+        {/* `--fechas`: en móvil los dos `input[type=date]` no caben a dos
+            columnas dentro del diálogo y se apilan (ver Movimientos.css). */}
+        <div className="mov-form__fila mov-form__fila--fechas">
           <div className="campo">
             <label className="campo__label" htmlFor="evento-inicio">
               Fecha de inicio
