@@ -355,3 +355,34 @@ del historial y auto-hospedaje de fuentes (arriba). **Se deja abierto, justifica
   a propósito: cada función queda autocontenida y desplegable por separado, y el alta
   —que funciona en producción— no se toca por un cambio que no la necesita. Si aparece
   una tercera función con la misma guarda, ahí sí toca extraer el helper compartido.
+
+---
+
+## [ui-movil] Rejilla del mes descuadrada por encima de 860 px
+
+- **Qué:** en la vista "Mes" del calendario las columnas son `1fr`, que es
+  `minmax(auto, 1fr)`: el nombre de un evento largo ensancha la columna de su día, así
+  que cada semana puede medir distinto y ninguna cuadra del todo con la cabecera de
+  días. Se ve, por ejemplo, en la semana que lleva "Congreso Anual Telefónica".
+- **Por qué:** el arreglo es una línea (`min-width: 0` en `.mes__celda`), pero cambia el
+  dibujo de la rejilla en escritorio y el encargo de este sprint era explícito: "en
+  pantalla ancha se mantiene la rejilla actual tal cual". Aplicado solo por debajo de
+  860 px, donde además era la diferencia entre caber en el panel o recortarse.
+- **Cuándo se resuelve:** cuando se pueda tocar el aspecto de escritorio, quitando el
+  `@media (max-width: 860px)` que envuelve `.mes__celda { min-width: 0 }` en
+  `src/pages/Calendario.css` y subiendo la regla al bloque base.
+- **Fecha:** 2026-08-19.
+
+---
+
+## [ui-movil] La tabla de Administración sigue pidiendo scroll lateral en móvil
+
+- **Qué:** `.admin__tabla` tiene `min-width: 640px` y su panel `overflow-x: auto`, así
+  que en un móvil hay que arrastrar la tabla para llegar a la columna de acciones.
+- **Por qué:** es una decisión anterior y deliberada (está comentada en `Admin.css`), y
+  el fallo de este sprint era la **alineación** de los botones con su fila, no el
+  scroll. Convertir la tabla en tarjetas apiladas es un rediseño, no un arreglo de
+  maquetación.
+- **Cuándo se resuelve:** si el uso desde móvil del panel de administración deja de ser
+  ocasional, rehacer la tabla como lista de tarjetas por debajo de 640 px.
+- **Fecha:** 2026-08-19.
