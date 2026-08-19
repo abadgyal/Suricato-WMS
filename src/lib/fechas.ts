@@ -63,6 +63,11 @@ export function solapan(aIni: string, aFin: string, bIni: string, bFin: string):
 
 const fmtMes = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' })
 const fmtDiaMes = new Intl.DateTimeFormat('es-ES', { day: '2-digit', month: 'short' })
+const fmtDiaLargo = new Intl.DateTimeFormat('es-ES', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+})
 
 /** "agosto de 2026". */
 export function etiquetaMes(iso: string): string {
@@ -72,6 +77,11 @@ export function etiquetaMes(iso: string): string {
 /** "01 ago". */
 export function etiquetaDiaMes(iso: string): string {
   return fmtDiaMes.format(parseDia(iso))
+}
+
+/** "miércoles, 19 de agosto" — cabecera de día en la agenda del mes (móvil). */
+export function etiquetaDiaLargo(iso: string): string {
+  return fmtDiaLargo.format(parseDia(iso))
 }
 
 /** Iniciales de los días de la semana, empezando en lunes. */

@@ -4,6 +4,7 @@ import { useCalendario, type EventoCalendario } from '../hooks/useCalendario'
 import {
   DIAS_SEMANA,
   diasEntre,
+  etiquetaDiaLargo,
   etiquetaDiaMes,
   etiquetaMes,
   hoyDia,
@@ -96,6 +97,13 @@ export function Calendario() {
     while (filas.length > 4 && filas[filas.length - 1].every((c) => !c.delMes)) filas.pop()
     return filas
   }, [celdas])
+
+  // Los mismos días, en lista: en móvil la rejilla de 7 columnas no cabe y la
+  // vista "Mes" se muestra como agenda (solo los días del mes que tienen algo).
+  const agendaMes = useMemo(
+    () => celdas.filter((c) => c.delMes && c.eventos.length > 0),
+    [celdas],
+  )
 
   const conflictosElegido = elegido ? conflictosPorEvento.get(elegido.id) ?? [] : []
 
@@ -269,6 +277,41 @@ export function Calendario() {
               </div>
             ))}
           </div>
+
+          {/* Misma información que la rejilla, apilada por días. Solo se ve por
+              debajo del breakpoint de móvil; en pantalla ancha manda `.mes`
+              (el reparto lo hace Calendario.css, no JS). */}
+          <ol className="mes-agenda">
+            {agendaMes.length === 0 ? (
+              <li className="mes-agenda__vacio">No hay eventos este mes.</li>
+            ) : (
+              agendaMes.map((c) => (
+                <li
+                  key={c.dia}
+                  className={`mes-agenda__dia ${c.dia === hoy ? 'mes-agenda__dia--hoy' : ''}`}
+                >
+                  <p className="mes-agenda__fecha">{etiquetaDiaLargo(c.dia)}</p>
+                  <div className="mes-agenda__eventos">
+                    {c.eventos.map((e) => {
+                      const conf = conflictosPorEvento.get(e.id) ?? []
+                      return (
+                        <button
+                          key={e.id}
+                          className={`mes__evento ${conf.length ? 'mes__evento--conflicto' : ''}`}
+                          style={{ ['--evento-color' as string]: colorBarra(e) }}
+                          onClick={() => setElegido(e)}
+                          title={e.nombre}
+                        >
+                          {conf.length > 0 && <IconAviso size={12} />}
+                          <span className="mes__evento-nombre">{e.nombre}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </li>
+              ))
+            )}
+          </ol>
         </section>
       )}
 

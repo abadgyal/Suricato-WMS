@@ -280,6 +280,72 @@
   white-space: nowrap;
 }
 
+/* Agenda del mes: la alternativa a la rejilla en pantalla estrecha. En ancha no
+   existe — la rejilla es la vista buena y se queda tal cual. */
+.mes-agenda {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 640px) {
+  /* Siete columnas no caben en un móvil: la rejilla se descuadra y obliga a
+     hacer scroll horizontal. Se cambia por la agenda, misma información en
+     vertical. El botón "Mes" sigue estando: solo cambia cómo se pinta. */
+  .mes {
+    display: none;
+  }
+
+  .mes-agenda {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .mes-agenda__dia {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .mes-agenda__fecha {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+  }
+
+  /* "miércoles, 19 de agosto" → "Miércoles, …" (capitalize tocaría al mes). */
+  .mes-agenda__fecha::first-letter {
+    text-transform: uppercase;
+  }
+
+  .mes-agenda__dia--hoy .mes-agenda__fecha {
+    color: var(--color-accent);
+  }
+
+  .mes-agenda__eventos {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* Reutiliza el chip de la rejilla (mismo color de cliente), a ancho completo
+     y con área de toque suficiente. */
+  .mes-agenda .mes__evento {
+    width: 100%;
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .mes-agenda__vacio {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+}
+
 /* ============================ Detalle (modal) =========================== */
 .cal__detalle {
   display: flex;
