@@ -108,7 +108,15 @@
   white-space: nowrap;
 }
 
+/* La celda de acciones NO puede ser `display: flex`: eso la saca del algoritmo
+   de tabla y los botones dejan de seguir la altura de su fila (se desfasaban
+   del usuario al que pertenecen, sobre todo con filas de dos líneas). La celda
+   se queda como `table-cell`; el flex vive dentro, en el envoltorio. */
 .admin__acciones {
+  text-align: right;
+}
+
+.admin__acciones-grupo {
   display: flex;
   gap: var(--space-2);
   justify-content: flex-end;

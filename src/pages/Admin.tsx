@@ -321,22 +321,26 @@ export function Admin() {
                   </td>
                   <td className="admin__fecha">{formatFecha(u.creado_en)}</td>
                   <td className="admin__acciones">
-                    {/*
-                      La contraseña del admin principal solo la cambia él mismo: al
-                      resto de admins ni se les ofrece, igual que con la baja. El
-                      servidor lo vuelve a comprobar (403).
-                    */}
-                    {u.activo && (!u.es_principal || u.id === perfil?.id) && (
-                      <button className="boton boton--secundario" onClick={() => setReseteando(u)}>
-                        Restablecer contraseña
-                      </button>
-                    )}
-                    {/* Invariante 8: al admin principal no se le ofrece la baja. */}
-                    {u.activo && !u.es_principal && (
-                      <button className="boton boton--secundario" onClick={() => setDesactivando(u)}>
-                        Dar de baja
-                      </button>
-                    )}
+                    {/* Los botones van en un envoltorio: la celda tiene que seguir
+                        siendo `table-cell` para quedarse a la altura de su fila. */}
+                    <div className="admin__acciones-grupo">
+                      {/*
+                        La contraseña del admin principal solo la cambia él mismo: al
+                        resto de admins ni se les ofrece, igual que con la baja. El
+                        servidor lo vuelve a comprobar (403).
+                      */}
+                      {u.activo && (!u.es_principal || u.id === perfil?.id) && (
+                        <button className="boton boton--secundario" onClick={() => setReseteando(u)}>
+                          Restablecer contraseña
+                        </button>
+                      )}
+                      {/* Invariante 8: al admin principal no se le ofrece la baja. */}
+                      {u.activo && !u.es_principal && (
+                        <button className="boton boton--secundario" onClick={() => setDesactivando(u)}>
+                          Dar de baja
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
