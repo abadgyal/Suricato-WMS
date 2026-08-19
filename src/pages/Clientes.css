@@ -160,4 +160,19 @@
   .clientes__buscador-input {
     width: 100%;
   }
+
+  /* Las señales («Material fuera · N eventos en curso») no encogen, así que al
+     competir por el ancho aplastaban el nombre y el contacto hasta pisarlos.
+     Pasan a su propia línea, alineadas con el nombre. */
+  .cliente-fila {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .cliente-fila__senales {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    /* Alineadas con el nombre: ancho de la barra de color + su hueco. */
+    padding-left: calc(10px + var(--space-4));
+  }
 }
