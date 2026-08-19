@@ -235,10 +235,21 @@
   border-radius: var(--radius-md);
 }
 
+/* Mismo caso que en `mov-form__foto`: `thumb--lg` es `width: 100%` y no encoge
+   (`flex-shrink: 0`), así que se comía toda la fila y empujaba el resumen fuera
+   de la tarjeta — en móvil quedaba cortado por el borde derecho. Se acota al
+   mismo cuadro de 96px. */
+.mov-precarga .thumb {
+  width: 96px;
+  height: 96px;
+  aspect-ratio: auto;
+}
+
 .mov-precarga__datos {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .mov-precarga__stock {
@@ -292,5 +303,11 @@
   .mov-form__fila,
   .mov-form__fila--4 {
     grid-template-columns: 1fr 1fr;
+  }
+
+  /* El resumen del producto deja de ir en segunda columna y se apila debajo:
+     a lo ancho no cabe y se salía por el borde derecho. */
+  .mov-precarga {
+    flex-direction: column;
   }
 }
