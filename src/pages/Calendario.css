@@ -209,6 +209,10 @@
 
 .mes__celda {
   min-height: 104px;
+  /* `1fr` es `minmax(auto, 1fr)`: sin esto el nombre largo de un evento ensancha
+     la columna de su día, las semanas dejan de medir lo mismo entre sí y ninguna
+     cuadra con la cabecera de días. */
+  min-width: 0;
   padding: 6px;
   border-top: 1px solid var(--color-border);
   border-left: 1px solid var(--color-border);
@@ -290,18 +294,10 @@
 }
 
 /* Tablet en vertical (iPad ~768px): la rejilla sigue siendo la vista buena,
-   pero no cabe en el panel (~672px útiles) y las semanas se descuadran. Se
-   ajusta solo aquí: por encima de 860px la rejilla se queda como estaba. */
+   pero no cabe en el panel (~672px útiles). Se estrecha solo aquí. */
 @media (max-width: 860px) {
   .mes {
     min-width: 640px;
-  }
-
-  /* `1fr` es `minmax(auto, 1fr)`: sin esto el contenido de un día ensancha su
-     columna, las semanas dejan de medir lo mismo entre sí y de cuadrar con la
-     cabecera, y la fila se sale del panel. */
-  .mes__celda {
-    min-width: 0;
   }
 }
 

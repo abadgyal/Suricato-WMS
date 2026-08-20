@@ -377,6 +377,10 @@ del historial y auto-hospedaje de fuentes (arriba). **Se deja abierto, justifica
   `@media (max-width: 860px)` que envuelve `.mes__celda { min-width: 0 }` en
   `src/pages/Calendario.css` y subiendo la regla al bloque base.
 - **Fecha:** 2026-08-19.
+- **Estado:** ✅ RESUELTA en el sprint de limpieza (2026-08-20). `min-width: 0` está
+  ya en el bloque base de `.mes__celda`, así que las siete columnas miden lo mismo en
+  cualquier ancho. En el `@media (max-width: 860px)` solo queda el `min-width` de
+  `.mes` (la rejilla estrecha de tablet).
 
 ---
 
