@@ -27,8 +27,9 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
-  /* En móvil la tabla es más ancha que el panel: que scrolle en horizontal
-     dentro de su caja en vez de recortarse (antes: overflow hidden). */
+  /* Tablet: la tabla es más ancha que el panel; que scrolle en horizontal dentro
+     de su caja en vez de recortarse. En móvil (≤640px) no hace falta: la tabla
+     se apila. */
   overflow-x: auto;
 }
 
@@ -149,4 +150,75 @@
   color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.55;
+}
+
+/* En móvil las cinco columnas obligaban a arrastrar la tabla en horizontal hasta
+   llegar a los botones. Aquí se relee como lista apilada dentro del mismo panel
+   —un bloque por usuario, como el resto de listas del móvil—: mismo marcado, y
+   las cabeceras de columna se recuperan con `data-etiqueta`. Por encima de 640px
+   la tabla se queda exactamente igual. */
+@media (max-width: 640px) {
+  .admin__panel {
+    /* Ya no hay nada que arrastrar; así se respetan las esquinas redondeadas. */
+    overflow-x: hidden;
+  }
+
+  .admin__tabla,
+  .admin__tabla tbody,
+  .admin__tabla tr,
+  .admin__tabla td {
+    display: block;
+  }
+
+  .admin__tabla {
+    min-width: 0;
+  }
+
+  .admin__tabla thead {
+    display: none;
+  }
+
+  .admin__tabla tr {
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .admin__tabla tr:last-child {
+    border-bottom: none;
+  }
+
+  .admin__tabla td {
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .admin__tabla td + td {
+    margin-top: var(--space-2);
+  }
+
+  /* Sin cabecera de tabla, cada dato dice de qué columna viene. */
+  .admin__tabla td[data-etiqueta]::before {
+    content: attr(data-etiqueta) ': ';
+    color: var(--color-text-secondary);
+    font-size: 13px;
+  }
+
+  /* El grupo de botones ya lleva su propia separación; la celda no añade otra. */
+  .admin__tabla td.admin__acciones {
+    margin-top: 0;
+    text-align: left;
+  }
+
+  /* Botones uno debajo de otro y a todo el ancho del bloque. */
+  .admin__acciones-grupo {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin-top: var(--space-4);
+  }
+
+  /* Un usuario dado de baja no tiene botones: que no deje un hueco muerto. */
+  .admin__acciones-grupo:empty {
+    margin-top: 0;
+  }
 }

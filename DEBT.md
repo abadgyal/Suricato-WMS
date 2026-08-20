@@ -395,3 +395,8 @@ del historial y auto-hospedaje de fuentes (arriba). **Se deja abierto, justifica
 - **Cuándo se resuelve:** si el uso desde móvil del panel de administración deja de ser
   ocasional, rehacer la tabla como lista de tarjetas por debajo de 640 px.
 - **Fecha:** 2026-08-19.
+- **Estado:** ✅ RESUELTA en el sprint de limpieza (2026-08-20). Por debajo de 640 px la
+  tabla se apila: cada usuario es un bloque dentro del mismo panel (nombre, rol, estado,
+  alta y sus botones en vertical, a todo el ancho), como el resto de listas del móvil.
+  Mismo marcado —las cabeceras de columna se recuperan con `data-etiqueta`—, así que
+  en escritorio la tabla no cambia; el `min-width: 640px` sigue vigente en tablet.

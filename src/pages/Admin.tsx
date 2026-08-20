@@ -313,13 +313,17 @@ export function Admin() {
                     {u.es_principal && <span className="admin__principal">Admin principal</span>}
                     {u.id === perfil?.id && <span className="admin__yo">Tú</span>}
                   </td>
-                  <td>{ROL_LABEL[u.rol]}</td>
-                  <td>
+                  {/* `data-etiqueta`: en móvil la tabla se apila y pierde la cabecera
+                      de columnas, así que cada dato lleva la suya delante (Admin.css). */}
+                  <td data-etiqueta="Rol">{ROL_LABEL[u.rol]}</td>
+                  <td data-etiqueta="Estado">
                     <span className={`admin__estado ${u.activo ? '' : 'admin__estado--baja'}`}>
                       {u.activo ? 'Activo' : 'Dado de baja'}
                     </span>
                   </td>
-                  <td className="admin__fecha">{formatFecha(u.creado_en)}</td>
+                  <td className="admin__fecha" data-etiqueta="Alta">
+                    {formatFecha(u.creado_en)}
+                  </td>
                   <td className="admin__acciones">
                     {/* Los botones van en un envoltorio: la celda tiene que seguir
                         siendo `table-cell` para quedarse a la altura de su fila. */}
