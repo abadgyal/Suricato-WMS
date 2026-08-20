@@ -1,7 +1,7 @@
 # Ping anti-pausa cada 3 días.
 #
 # El plan free de Supabase pausa el proyecto tras ~7 días sin actividad. Este workflow
-# hace una petición GET ligera al endpoint REST para mantenerlo despierto.
+# hace una petición GET ligera contra el proyecto para mantenerlo despierto.
 #
 # SECRETS que hay que configurar en GitHub
 # (Settings → Secrets and variables → Actions → New repository secret):
@@ -13,7 +13,14 @@
 #                             Es pública por diseño (protegida por RLS), pero se guarda
 #                             como secret para no exponerla en los logs del workflow.
 #
-# NOTA: nunca uses aquí la service_role / sb_secret_...: basta con la anon key.
+# NOTA: nunca uses aquí la service_role / sb_secret_...: basta con la publishable.
+#
+# POR QUÉ NO SE PIDE `/rest/v1/` (daba 401)
+# El endpoint raíz de PostgREST ya solo admite claves secretas:
+#   {"message":"Secret API key required",
+#    "hint":"Only secret API keys can be used for this endpoint."}
+# Con la publishable devuelve 401 se mande como se mande. Se pide en su lugar una RPC
+# pública, que además obliga a Postgres a responder — que es la actividad que cuenta.
 
 name: Keepalive Supabase
 
@@ -27,7 +34,7 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: GET al endpoint REST de Supabase
+      - name: GET a una RPC pública de Supabase
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
@@ -36,13 +43,15 @@ jobs:
             echo "::error::Faltan los secrets SUPABASE_URL y/o SUPABASE_PUBLISHABLE_KEY."
             exit 1
           fi
-          # Petición al endpoint REST raíz. Solo necesita la anon key en las cabeceras.
-          # -f hace que curl falle (exit != 0) ante respuestas de error HTTP.
+          # `is_admin()` es un helper `stable` con EXECUTE concedido a `anon`
+          # (migración 20260709120000_perfil_auth_bridge.sql): sin sesión devuelve
+          # `false`, no expone ningún dato, y la llamada llega hasta Postgres.
+          # La clave publishable va SOLO en la cabecera `apikey`, que es su uso
+          # previsto; no es un JWT y no se manda como `Authorization: Bearer`.
           # No se imprime el cuerpo para no volcar datos ni la clave en el log.
           HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' \
             -H "apikey: ${SUPABASE_PUBLISHABLE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_PUBLISHABLE_KEY}" \
-            "${SUPABASE_URL}/rest/v1/")"
+            "${SUPABASE_URL}/rest/v1/rpc/is_admin")"
           echo "Respuesta HTTP: ${HTTP_CODE}"
           # 200 (OK) o 404 (sin recurso, pero el proyecto respondió) valen como "vivo".
           case "$HTTP_CODE" in
