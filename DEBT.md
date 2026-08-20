@@ -293,6 +293,11 @@ Cada entrada: qué se pospuso, por qué, y el sprint o condición en que se reto
 - **Estado (S-G, 2026-07-15):** herramienta lista — `scripts/purge-demo.sql` borra las
   tres cuentas `%@suricato.local` (y todos los datos demo). Lo ejecuta el humano antes
   del go-live (ver `docs/PURGE.md`); por política (CLAUDE.md §7) Claude no toca usuarios.
+- **Nota (limpieza, 2026-08-20):** las cuentas demo del seed ya están **desactivadas**
+  en la BD remota, y eso hacía fallar dos tests de seguridad que hardcodeaban el id
+  del admin del seed (`is_admin()` exige `activo`). `scripts/db-test.mjs` ya no
+  depende de ellas: descubre sus actores en la BD (admin = el `es_principal`), así
+  que la purga de las cuentas demo tampoco romperá los tests.
 
 ### [S-F] `cliente.parent_id` queda en la BD sin uso
 - **Qué:** la cartera es una lista plana (decisión de S-F): la UI ignora `parent_id`

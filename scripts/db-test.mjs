@@ -205,13 +205,33 @@ async function runConcurrencyTest() {
 
 // --- Tests de seguridad (RLS + roles) ---------------------------------------
 // Simulan usuarios autenticados con `set local role` + `request.jwt.claims`.
-// Usan los datos del seed (admin 11111111, trabajador 22222222, producto Shure).
+// El producto de pruebas sale del seed (Shure SM58); los actores (admin,
+// trabajador) se descubren en la BD (ver `descubrirActores`).
 // Todo va dentro de BEGIN...ROLLBACK: no muta la BD.
 const SEC = {
-  admin: '11111111-1111-1111-1111-111111111111',
-  trab:  '22222222-2222-2222-2222-222222222222',
-  prod:  'a0000002-0000-0000-0000-000000000002', // Shure SM58, disponible 3
+  prod: 'a0000002-0000-0000-0000-000000000002', // Shure SM58, disponible 3
 };
+
+// Los actores (QUIÉN ejecuta) se descubren en la BD en vez de hardcodear los ids
+// del seed: las cuentas demo pueden estar desactivadas o purgadas (DEBT [S-F],
+// docs/PURGE.md) e `is_admin()` exige `activo`, así que un admin desactivado ya
+// NO es admin y las pruebas de rol darían un falso fallo.
+async function descubrirActores(client) {
+  const uno = async (sql) => (await client.query(sql)).rows[0] ?? null;
+  return {
+    // Admin activo garantizado por la invariante 8 (DOMAIN §5): el principal.
+    admin: await uno(`select id, nombre from perfil
+                        where es_principal and rol = 'admin' and activo limit 1`),
+    // No-admin: se prefiere uno activo, para probar el rol y no el estado.
+    trab: await uno(`select id, nombre, activo from perfil
+                       where rol = 'trabajador' order by activo desc, creado_en limit 1`),
+    // Objetivo de la baja lógica: cualquiera que no sea el principal; se prefiere
+    // uno ya inactivo para que la operación sea semánticamente un no-op.
+    // (Todo va dentro de BEGIN...ROLLBACK: no muta la BD.)
+    objetivo: await uno(`select id, nombre from perfil
+                           where not es_principal order by activo, creado_en limit 1`),
+  };
+}
 const claimsOf = (sub) => JSON.stringify({ sub, role: 'authenticated' });
 
 // Ejecuta `run` dentro de una transacción como cierto rol/JWT y siempre revierte.
@@ -245,54 +265,69 @@ async function runSecurityTests() {
   const c = new pg.Client(clientConfig);
   await c.connect();
   try {
-    // El principal real (dev: seed; prod: bootstrap) se descubre dinámicamente.
-    const { rows } = await c.query('select id from perfil where es_principal limit 1');
-    const principalId = rows[0]?.id ?? SEC.admin;
+    const actores = await descubrirActores(c);
+    const faltan = [
+      [actores.admin, 'un admin principal activo'],
+      [actores.trab, 'un trabajador'],
+      [actores.objetivo, 'un perfil no principal'],
+    ].filter(([v]) => !v).map(([, etiqueta]) => etiqueta);
+    if (faltan.length) {
+      recordSec(false, 'hay actores para los tests de seguridad', `faltan en perfil: ${faltan.join(', ')}`);
+      return;
+    }
+    // El admin actuante es el principal: admin y activo por definición.
+    const ADMIN = actores.admin.id;
+    const TRAB = actores.trab.id;
+    const OBJETIVO = actores.objetivo.id;
+    const principalId = ADMIN;
+    if (!actores.trab.activo) {
+      console.log('  ' + DIM('# aviso: no hay ningún trabajador activo; se usa uno desactivado'));
+    }
 
     // 1) S-D: un trabajador SÍ puede ajustar y dar_de_baja (permisos abiertos a
     //    cualquier autenticado; ya no lanzan WMS009 por rol).
-    let r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    let r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(`select ajustar($1, 'disponible', 5, 'recuento')`, [SEC.prod]));
     recordSec(r.ok, 'trabajador SÍ puede ajustar (S-D)', r.err?.message?.split('\n')[0]);
 
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(`select dar_de_baja($1, 1, 'disponible', 'merma')`, [SEC.prod]));
     recordSec(r.ok, 'trabajador SÍ puede dar_de_baja (S-D)', r.err?.message?.split('\n')[0]);
 
     // 2) Un admin también puede ajustar y dar_de_baja.
-    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(ADMIN), role: 'authenticated' },
       () => c.query(`select ajustar($1, 'disponible', 5, 'recuento')`, [SEC.prod]));
     recordSec(r.ok, 'admin SÍ puede ajustar', r.err?.message?.split('\n')[0]);
 
-    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(ADMIN), role: 'authenticated' },
       () => c.query(`select dar_de_baja($1, 1, 'disponible', 'merma')`, [SEC.prod]));
     recordSec(r.ok, 'admin SÍ puede dar_de_baja', r.err?.message?.split('\n')[0]);
 
     // 2b) S-D: un trabajador SÍ puede crear y editar categorías (antes solo admin).
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(`insert into categoria (nombre, color) values ('ZZ_SD_CAT', '#123456')`));
     recordSec(r.ok, 'trabajador SÍ puede crear categoría (S-D)', r.err?.message?.split('\n')[0]);
 
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(`update categoria set color = '#654321' where nombre = 'Audio'`));
     recordSec(r.ok, 'trabajador SÍ puede editar categoría (S-D)', r.err?.message?.split('\n')[0]);
 
     // 3) Un trabajador NO puede INSERT directo en movimiento (sin privilegio).
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(
         `insert into movimiento (tipo, producto_id, usuario_id, unidades, bucket_destino)
-         values ('entrada', $1, $2, 1, 'disponible')`, [SEC.prod, SEC.trab]));
+         values ('entrada', $1, $2, 1, 'disponible')`, [SEC.prod, TRAB]));
     recordSec(!r.ok && /permission denied/i.test(r.err?.message), 'trabajador NO puede INSERT en movimiento',
       r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
 
     // 4) Un trabajador NO puede UPDATE sobre los buckets de producto (sin privilegio de columna).
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(`update producto set disponible = disponible + 1 where id = $1`, [SEC.prod]));
     recordSec(!r.ok && /permission denied/i.test(r.err?.message), 'trabajador NO puede UPDATE buckets de producto',
       r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
 
     // 5) Un trabajador SÍ puede editar metadatos de producto (no buckets).
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query(`update producto set ubicacion = 'ZZ-sec' where id = $1`, [SEC.prod]));
     recordSec(r.ok, 'trabajador SÍ puede editar metadatos de producto', r.err?.message?.split('\n')[0]);
 
@@ -303,24 +338,24 @@ async function runSecurityTests() {
       r.ok ? 'leyó datos' : r.err?.message?.split('\n')[0]);
 
     // 7) Un autenticado SÍ puede leer inventario.
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
       () => c.query('select count(*) from producto'));
     recordSec(r.ok, 'autenticado SÍ puede leer producto', r.err?.message?.split('\n')[0]);
 
     // 8) desactivar_usuario sobre un es_principal falla (invariante 8).
-    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
+    r = await inTxnAs(c, { claims: claimsOf(ADMIN), role: 'authenticated' },
       () => c.query('select desactivar_usuario($1)', [principalId]));
     recordSec(!r.ok && /WMS_PRINCIPAL/.test(r.err?.message), 'desactivar_usuario sobre el principal falla',
       r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
 
     // 9) desactivar_usuario sobre un usuario normal, por un admin, funciona.
-    r = await inTxnAs(c, { claims: claimsOf(SEC.admin), role: 'authenticated' },
-      () => c.query('select desactivar_usuario($1)', [SEC.trab]));
+    r = await inTxnAs(c, { claims: claimsOf(ADMIN), role: 'authenticated' },
+      () => c.query('select desactivar_usuario($1)', [OBJETIVO]));
     recordSec(r.ok, 'desactivar_usuario sobre un usuario normal funciona', r.err?.message?.split('\n')[0]);
 
     // 10) Un trabajador NO puede desactivar usuarios → WMS009.
-    r = await inTxnAs(c, { claims: claimsOf(SEC.trab), role: 'authenticated' },
-      () => c.query('select desactivar_usuario($1)', [SEC.trab]));
+    r = await inTxnAs(c, { claims: claimsOf(TRAB), role: 'authenticated' },
+      () => c.query('select desactivar_usuario($1)', [OBJETIVO]));
     recordSec(!r.ok && /WMS009/.test(r.err?.message), 'trabajador NO puede desactivar_usuario (WMS009)',
       r.ok ? 'no lanzó error' : r.err?.message?.split('\n')[0]);
   } finally {
